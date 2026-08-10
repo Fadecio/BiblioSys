@@ -60,7 +60,7 @@ export const DashboardPage = () => {
       </div>
 
       <CardsResumo cards={cards} />
-      <GraficoMaisProcurados dados={maisProcurados} />
+      {/* <GraficoMaisProcurados dados={maisProcurados} /> */}
     </div>
   );
 };
