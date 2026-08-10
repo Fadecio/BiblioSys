@@ -1,0 +1,86 @@
+import { Pencil, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import type { Aluno } from '@/types'
+
+interface AlunoTableProps {
+  alunos: Aluno[]
+  onEditar: (aluno: Aluno) => void
+  onExcluir: (id: string) => void
+  temEmprestimoAtivo: (alunoId: string) => boolean
+}
+
+export const AlunoTable = ({ alunos, onEditar, onExcluir, temEmprestimoAtivo }: AlunoTableProps) => {
+  if (alunos.length === 0) {
+    return <p className="py-10 text-center text-sm text-muted-foreground">Nenhum aluno encontrado.</p>
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Nome</TableHead>
+          <TableHead>Turma</TableHead>
+          <TableHead>Série</TableHead>
+          <TableHead>Matrícula</TableHead>
+          <TableHead className="text-right">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {alunos.map((aluno) => {
+          const bloqueado = temEmprestimoAtivo(aluno.id)
+
+          return (
+            <TableRow key={aluno.id}>
+              <TableCell className="font-medium text-foreground">{aluno.nome}</TableCell>
+              <TableCell>{aluno.turma}</TableCell>
+              <TableCell>{aluno.serie}</TableCell>
+              <TableCell>{aluno.matricula ?? '—'}</TableCell>
+              <TableCell className="flex justify-end gap-1">
+                <Button variant="ghost" size="icon-sm" onClick={() => onEditar(aluno)} aria-label="Editar aluno">
+                  <Pencil className="size-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Excluir aluno"
+                      disabled={bloqueado}
+                      title={bloqueado ? 'Aluno possui empréstimo em aberto — não pode ser excluído' : undefined}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir aluno</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir {aluno.nome}? Essa ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onExcluir(aluno.id)}>Excluir</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
+            </TableRow>
+          )
+        })}
+      </TableBody>
+    </Table>
+  )
+}
