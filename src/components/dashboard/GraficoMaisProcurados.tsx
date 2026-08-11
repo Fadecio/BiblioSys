@@ -9,10 +9,7 @@ const LARGURA_MINIMA = 480
 export const GraficoMaisProcurados = ({ dados }: { dados: LivroProcurado[] }) => {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [largura, setLargura] = useState(0)
-
-  // mede o container antes do paint (useLayoutEffect) em vez de depender do
-  // ResponsiveContainer do Recharts, que só mede via ResizeObserver após o mount
-  // e causa um "salto" visível: gráfico nasce pequeno e redimensiona um instante depois
+  
   useLayoutEffect(() => {
     const elemento = wrapperRef.current
     if (!elemento) return
