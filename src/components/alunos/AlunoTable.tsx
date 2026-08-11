@@ -1,6 +1,13 @@
-import { Pencil, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,18 +18,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import type { Aluno } from '@/types'
+} from "@/components/ui/alert-dialog";
+import type { Aluno } from "@/types";
 
 interface AlunoTableProps {
-  alunos: Aluno[]
-  onEditar: (aluno: Aluno) => void
-  onExcluir: (id: string) => void
+  alunos: Aluno[];
+  onEditar: (aluno: Aluno) => void;
+  onExcluir: (id: string) => void;
 }
 
-export const AlunoTable = ({ alunos, onEditar, onExcluir }: AlunoTableProps) => {
+export const AlunoTable = ({
+  alunos,
+  onEditar,
+  onExcluir,
+}: AlunoTableProps) => {
   if (alunos.length === 0) {
-    return <p className="py-10 text-center text-sm text-muted-foreground">Nenhum aluno encontrado.</p>
+    return (
+      <p className="py-10 text-center text-sm text-muted-foreground">
+        Nenhum aluno encontrado.
+      </p>
+    );
   }
 
   return (
@@ -30,9 +45,8 @@ export const AlunoTable = ({ alunos, onEditar, onExcluir }: AlunoTableProps) => 
       <TableHeader>
         <TableRow>
           <TableHead className="max-w-60">Nome</TableHead>
-          <TableHead>Turma</TableHead>
-          <TableHead>Série</TableHead>
-          <TableHead>Matrícula</TableHead>
+          <TableHead className="text-center">Série</TableHead>
+          <TableHead className="text-center">Turma</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
       </TableHeader>
@@ -40,19 +54,30 @@ export const AlunoTable = ({ alunos, onEditar, onExcluir }: AlunoTableProps) => 
         {alunos.map((aluno) => {
           return (
             <TableRow key={aluno.id}>
-              <TableCell className="max-w-60 truncate font-medium text-foreground" title={aluno.nome}>
+              <TableCell
+                className="max-w-60 truncate font-medium text-foreground"
+                title={aluno.nome}
+              >
                 {aluno.nome}
               </TableCell>
-              <TableCell>{aluno.turma}</TableCell>
-              <TableCell>{aluno.serie}</TableCell>
-              <TableCell>{aluno.matricula ?? '—'}</TableCell>
+              <TableCell className="text-center">{aluno.serie}</TableCell>
+              <TableCell className="text-center">{aluno.turma}</TableCell>
               <TableCell className="flex justify-end gap-1">
-                <Button variant="ghost" size="icon-sm" onClick={() => onEditar(aluno)} aria-label="Editar aluno">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => onEditar(aluno)}
+                  aria-label="Editar aluno"
+                >
                   <Pencil className="size-4" />
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" aria-label="Excluir aluno">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Excluir aluno"
+                    >
                       <Trash2 className="size-4" />
                     </Button>
                   </AlertDialogTrigger>
@@ -60,20 +85,23 @@ export const AlunoTable = ({ alunos, onEditar, onExcluir }: AlunoTableProps) => 
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir aluno</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Tem certeza que deseja excluir {aluno.nome}? Essa ação não pode ser desfeita.
+                        Tem certeza que deseja excluir {aluno.nome}? Essa ação
+                        não pode ser desfeita.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onExcluir(aluno.id)}>Excluir</AlertDialogAction>
+                      <AlertDialogAction onClick={() => onExcluir(aluno.id)}>
+                        Excluir
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               </TableCell>
             </TableRow>
-          )
+          );
         })}
       </TableBody>
     </Table>
-  )
-}
+  );
+};
