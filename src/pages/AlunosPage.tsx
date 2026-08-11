@@ -6,26 +6,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { AlunoForm } from '@/components/alunos/AlunoForm'
 import { AlunoTable } from '@/components/alunos/AlunoTable'
 import { useAlunos, type DadosAluno } from '@/hooks/useAlunos'
-import { useEmprestimos } from '@/hooks/useEmprestimos'
 import { normalizarTexto } from '@/utils/texto'
 import type { Aluno } from '@/types'
 
 export const AlunosPage = () => {
   const { alunos, adicionar, atualizar, remover } = useAlunos()
-  const { alunoTemEmprestimoAtivo } = useEmprestimos()
   const [busca, setBusca] = useState('')
   const [dialogAberto, setDialogAberto] = useState(false)
   const [alunoEmEdicao, setAlunoEmEdicao] = useState<Aluno | undefined>(undefined)
 
   const alunosFiltrados = useMemo(() => {
     const termo = normalizarTexto(busca.trim())
-    if (!termo) return alunos
-    return alunos.filter(
-      (aluno) =>
-        normalizarTexto(aluno.nome).includes(termo) ||
-        normalizarTexto(aluno.turma).includes(termo) ||
-        normalizarTexto(aluno.serie).includes(termo),
-    )
+    const filtrados = termo
+      ? alunos.filter(
+          (aluno) =>
+            normalizarTexto(aluno.nome).includes(termo) ||
+            normalizarTexto(aluno.turma).includes(termo) ||
+            normalizarTexto(aluno.serie).includes(termo),
+        )
+      : alunos
+    return [...filtrados].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
   }, [alunos, busca])
 
   const abrirNovo = () => {
@@ -67,13 +67,8 @@ export const AlunosPage = () => {
         className="max-w-sm"
       />
 
-      <div className="rounded-lg border border-border bg-white">
-        <AlunoTable
-          alunos={alunosFiltrados}
-          onEditar={abrirEdicao}
-          onExcluir={remover}
-          temEmprestimoAtivo={alunoTemEmprestimoAtivo}
-        />
+      <div className="overflow-x-auto rounded-lg border border-border bg-white">
+        <AlunoTable alunos={alunosFiltrados} onEditar={abrirEdicao} onExcluir={remover} />
       </div>
 
       <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>

@@ -18,10 +18,9 @@ interface AlunoTableProps {
   alunos: Aluno[]
   onEditar: (aluno: Aluno) => void
   onExcluir: (id: string) => void
-  temEmprestimoAtivo: (alunoId: string) => boolean
 }
 
-export const AlunoTable = ({ alunos, onEditar, onExcluir, temEmprestimoAtivo }: AlunoTableProps) => {
+export const AlunoTable = ({ alunos, onEditar, onExcluir }: AlunoTableProps) => {
   if (alunos.length === 0) {
     return <p className="py-10 text-center text-sm text-muted-foreground">Nenhum aluno encontrado.</p>
   }
@@ -39,8 +38,6 @@ export const AlunoTable = ({ alunos, onEditar, onExcluir, temEmprestimoAtivo }: 
       </TableHeader>
       <TableBody>
         {alunos.map((aluno) => {
-          const bloqueado = temEmprestimoAtivo(aluno.id)
-
           return (
             <TableRow key={aluno.id}>
               <TableCell className="font-medium text-foreground">{aluno.nome}</TableCell>
@@ -53,13 +50,7 @@ export const AlunoTable = ({ alunos, onEditar, onExcluir, temEmprestimoAtivo }: 
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label="Excluir aluno"
-                      disabled={bloqueado}
-                      title={bloqueado ? 'Aluno possui empréstimo em aberto — não pode ser excluído' : undefined}
-                    >
+                    <Button variant="ghost" size="icon-sm" aria-label="Excluir aluno">
                       <Trash2 className="size-4" />
                     </Button>
                   </AlertDialogTrigger>
