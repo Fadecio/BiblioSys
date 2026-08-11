@@ -1,8 +1,8 @@
-import { useState, type SubmitEvent } from 'react'
+import { useMemo, useState, type SubmitEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import { useAlunos } from '@/hooks/useAlunos'
 import { useLivros } from '@/hooks/useLivros'
 
@@ -17,6 +17,27 @@ export const EmprestimoForm = ({ onRegistrar, onCancelar }: EmprestimoFormProps)
   const [alunoId, setAlunoId] = useState('')
   const [livroId, setLivroId] = useState('')
   const [erro, setErro] = useState('')
+
+  const opcoesAlunos = useMemo(
+    () =>
+      alunos.map((aluno) => ({
+        value: aluno.id,
+        label: `${aluno.nome} — ${aluno.turma}`,
+        searchValue: `${aluno.nome} ${aluno.turma} ${aluno.matricula ?? ''}`,
+      })),
+    [alunos],
+  )
+
+  const opcoesLivros = useMemo(
+    () =>
+      livros.map((livro) => ({
+        value: livro.id,
+        label: `${livro.titulo} ${livro.quantidadeDisponivel === 0 ? '(indisponível)' : `(${livro.quantidadeDisponivel} disp.)`}`,
+        searchValue: `${livro.titulo} ${livro.autor} ${livro.codigo}`,
+        disabled: livro.quantidadeDisponivel === 0,
+      })),
+    [livros],
+  )
 
   const handleSubmit = (evento: SubmitEvent) => {
     evento.preventDefault()
@@ -36,33 +57,25 @@ export const EmprestimoForm = ({ onRegistrar, onCancelar }: EmprestimoFormProps)
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <Label>Aluno</Label>
-        <Select value={alunoId} onValueChange={setAlunoId}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione um aluno" />
-          </SelectTrigger>
-          <SelectContent>
-            {alunos.map((aluno) => (
-              <SelectItem key={aluno.id} value={aluno.id}>
-                {aluno.nome} — {aluno.turma}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Combobox
+          options={opcoesAlunos}
+          value={alunoId}
+          onChange={setAlunoId}
+          placeholder="Selecione um aluno"
+          searchPlaceholder="Buscar por nome, turma ou matrícula..."
+          emptyMessage="Nenhum aluno encontrado."
+        />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label>Livro</Label>
-        <Select value={livroId} onValueChange={setLivroId}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione um livro" />
-          </SelectTrigger>
-          <SelectContent>
-            {livros.map((livro) => (
-              <SelectItem key={livro.id} value={livro.id} disabled={livro.quantidadeDisponivel === 0}>
-                {livro.titulo} {livro.quantidadeDisponivel === 0 ? '(indisponível)' : `(${livro.quantidadeDisponivel} disp.)`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Combobox
+          options={opcoesLivros}
+          value={livroId}
+          onChange={setLivroId}
+          placeholder="Selecione um livro"
+          searchPlaceholder="Buscar por título, autor ou código..."
+          emptyMessage="Nenhum livro encontrado."
+        />
       </div>
       {erro && <p className="text-sm text-destructive">{erro}</p>}
       <DialogFooter>

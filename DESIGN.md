@@ -29,6 +29,7 @@ lista foi adicionada sem justificar:
 | Sem react-hook-form / zod | Não estão na lista de stack do spec. Formulários são `useState` controlado + validação manual simples. |
 | Sem lib de toast | Idem. Feedback de ações é inline (mensagem no formulário, `AlertDialog` do shadcn pra confirmação de exclusão). |
 | `@radix-ui` (via shadcn) para o menu mobile (`sheet`) | Mesma origem dos componentes já usados — não é uma lib nova, é outro primitivo do mesmo sistema. |
+| `Popover` do pacote `radix-ui` (já dependência, sem instalar nada novo) para o combobox de busca em Aluno/Livro do empréstimo | Evita adicionar `cmdk` (lib do combobox "oficial" do shadcn) só pra isso — o filtro em si é `Array.filter` + `normalizarTexto`, reaproveitando o padrão de busca já usado em Livros/Alunos. |
 
 ## Sistema de design ("Utilitário limpo")
 
@@ -108,6 +109,24 @@ Radix), sem introduzir nenhuma lib nova:
 ---
 
 ## Histórico de alterações
+
+### 2026-08-11 — Busca por nome nos campos de aluno/livro do empréstimo
+- **Pedido:** no cadastro de empréstimo, tanto o campo de aluno quanto o de
+  livro precisavam permitir digitar o nome pra encontrar mais fácil na
+  lista — os `Select` simples do shadcn não têm busca embutida.
+- **Implementação:** criado `ui/popover.tsx` (primitivo `Popover` do pacote
+  `radix-ui`, já dependência do projeto) e `ui/combobox.tsx`, um combobox
+  genérico (trigger + campo de busca + lista filtrada, com opção
+  `disabled` por item) reutilizado nos dois campos de
+  `EmprestimoForm.tsx`. A busca usa `normalizarTexto` (mesma função de
+  Livros/Alunos, tolerante a acento/caixa) sobre nome+turma+matrícula do
+  aluno e título+autor+código do livro. Testado no navegador (Playwright):
+  abrir o combobox, filtrar, selecionar e enviar o formulário funcionam
+  sem erros de console.
+- **Por que não usei o combobox "oficial" do shadcn:** ele depende da lib
+  `cmdk`, fora da stack do spec. Como o volume de itens é pequeno
+  (dezenas, não milhares), um filtro simples com `Array.filter` sobre o
+  `Popover` já existente resolve sem dependência nova.
 
 ### 2026-08-11 — Truncar texto longo nas colunas de nome/título/autor
 - **Sintoma:** em Livros e Alunos, um título, autor ou nome de aluno muito
