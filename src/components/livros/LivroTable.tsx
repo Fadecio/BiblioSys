@@ -31,8 +31,8 @@ export const LivroTable = ({ livros, onEditar, onExcluir }: LivroTableProps) => 
       <TableHeader>
         <TableRow>
           <TableHead className="w-12">Nº</TableHead>
-          <TableHead>Título</TableHead>
-          <TableHead>Autor</TableHead>
+          <TableHead className="max-w-60">Título</TableHead>
+          <TableHead className="max-w-45">Autor</TableHead>
           <TableHead>Categoria</TableHead>
           <TableHead>Código</TableHead>
           <TableHead>Disponibilidade</TableHead>
@@ -44,8 +44,12 @@ export const LivroTable = ({ livros, onEditar, onExcluir }: LivroTableProps) => 
           return (
             <TableRow key={livro.id}>
               <TableCell className="text-muted-foreground">{index + 1}</TableCell>
-              <TableCell className="font-medium text-foreground">{livro.titulo}</TableCell>
-              <TableCell>{livro.autor}</TableCell>
+              <TableCell className="max-w-60 truncate font-medium text-foreground" title={livro.titulo}>
+                {livro.titulo}
+              </TableCell>
+              <TableCell className="max-w-45 truncate" title={livro.autor}>
+                {livro.autor}
+              </TableCell>
               <TableCell>{livro.categoria}</TableCell>
               <TableCell>{livro.codigo}</TableCell>
               <TableCell>

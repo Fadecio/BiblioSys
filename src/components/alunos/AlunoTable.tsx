@@ -29,7 +29,7 @@ export const AlunoTable = ({ alunos, onEditar, onExcluir }: AlunoTableProps) => 
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Nome</TableHead>
+          <TableHead className="max-w-60">Nome</TableHead>
           <TableHead>Turma</TableHead>
           <TableHead>Série</TableHead>
           <TableHead>Matrícula</TableHead>
@@ -40,7 +40,9 @@ export const AlunoTable = ({ alunos, onEditar, onExcluir }: AlunoTableProps) => 
         {alunos.map((aluno) => {
           return (
             <TableRow key={aluno.id}>
-              <TableCell className="font-medium text-foreground">{aluno.nome}</TableCell>
+              <TableCell className="max-w-60 truncate font-medium text-foreground" title={aluno.nome}>
+                {aluno.nome}
+              </TableCell>
               <TableCell>{aluno.turma}</TableCell>
               <TableCell>{aluno.serie}</TableCell>
               <TableCell>{aluno.matricula ?? '—'}</TableCell>

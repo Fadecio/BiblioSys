@@ -109,6 +109,18 @@ Radix), sem introduzir nenhuma lib nova:
 
 ## Histórico de alterações
 
+### 2026-08-11 — Truncar texto longo nas colunas de nome/título/autor
+- **Sintoma:** em Livros e Alunos, um título, autor ou nome de aluno muito
+  longo forçava a coluna a crescer, estourando a largura da tabela e
+  criando uma barra de rolagem horizontal — a `TableCell` base usa
+  `whitespace-nowrap` sem limite de largura.
+- **Correção:** adicionado `max-w-60`/`max-w-45` (Título/Autor em
+  `LivroTable.tsx`, Nome em `AlunoTable.tsx`) combinado com `truncate`
+  (ellipsis) nas células e no `TableHead` correspondente, para que o texto
+  seja cortado com "…" em vez de expandir a coluna. Adicionado atributo
+  `title` nativo na célula para mostrar o texto completo ao passar o mouse,
+  já que não há lib de tooltip na stack.
+
 ### 2026-08-11 — Numeração dos livros na tabela
 - **Pedido:** além da ordenação alfabética por título já existente, o usuário
   pediu uma numeração visível para ter controle da quantidade de títulos
