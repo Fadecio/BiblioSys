@@ -2,7 +2,6 @@
 
 Sistema de gerenciamento de biblioteca escolar: um dashboard interno para controlar o cadastro de alunos, livros e empréstimos, com indicadores consolidados.
 
-Deploy: https://biblio-sys.vercel.app
 
 ## Funcionalidades
 
