@@ -1,17 +1,17 @@
-import { useMemo } from "react";
 import {
   CardsResumo,
   construirCardsResumo,
 } from "@/components/dashboard/CardsResumo";
 import { GraficoMaisProcurados } from "@/components/dashboard/GraficoMaisProcurados";
 import { useAlunos } from "@/hooks/useAlunos";
-import { useLivros } from "@/hooks/useLivros";
 import { useEmprestimos } from "@/hooks/useEmprestimos";
+import { useLivros } from "@/hooks/useLivros";
 import {
   derivarStatus,
   livrosMaisProcurados,
   statusExibicao,
 } from "@/utils/emprestimo";
+import { useMemo } from "react";
 
 export const DashboardPage = () => {
   const { alunos } = useAlunos();
@@ -45,22 +45,27 @@ export const DashboardPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-20">
-        <div>
+      <div className="flex flex-col items-center gap-2 text-center">
+        <div className="flex flex-col items-center">
           <h2 className="text-xl font-semibold text-foreground">Dashboard</h2>
           <p className="text-sm text-muted-foreground">
             Visão geral da biblioteca.
           </p>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            ESCOLA RAIMUNDO MARQUES DE ALMEIDA
+
+        <div className="w-full max-w-2xl">
+          <h1 className="text-2xl font-bold leading-tight text-foreground md:text-3xl">
+            <span className="hidden md:inline">
+              ESCOLA RAIMUNDO MARQUES DE ALMEIDA
+            </span>
+            <span className="block md:hidden">ESCOLA RAIMUNDO</span>
+            <span className="block md:hidden">MARQUES DE ALMEIDA</span>
           </h1>
         </div>
       </div>
 
       <CardsResumo cards={cards} />
-      {/* <GraficoMaisProcurados dados={maisProcurados} /> */}
+      <GraficoMaisProcurados dados={maisProcurados} />
     </div>
   );
 };
