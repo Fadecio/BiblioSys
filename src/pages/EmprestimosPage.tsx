@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmprestimoForm } from '@/components/emprestimos/EmprestimoForm'
 import { EmprestimoTable } from '@/components/emprestimos/EmprestimoTable'
+import { useAlunos } from '@/hooks/useAlunos'
+import { useLivros } from '@/hooks/useLivros'
 import { useEmprestimos } from '@/hooks/useEmprestimos'
 import { statusExibicao } from '@/utils/emprestimo'
+import { normalizarTexto } from '@/utils/texto'
 
 type Filtro = 'todos' | 'ativos' | 'atrasados' | 'a-vencer'
 
@@ -19,15 +23,32 @@ const ABAS: { valor: Filtro; rotulo: string }[] = [
 
 export const EmprestimosPage = () => {
   const { emprestimos, registrar } = useEmprestimos()
+  const { alunos } = useAlunos()
+  const { livros } = useLivros()
   const [filtro, setFiltro] = useState<Filtro>('todos')
+  const [busca, setBusca] = useState('')
   const [dialogAberto, setDialogAberto] = useState(false)
 
   const emprestimosFiltrados = useMemo(() => {
-    if (filtro === 'todos') return emprestimos
-    if (filtro === 'atrasados') return emprestimos.filter((e) => statusExibicao(e) === 'atrasado')
-    if (filtro === 'a-vencer') return emprestimos.filter((e) => statusExibicao(e) === 'a-vencer')
-    return emprestimos.filter((e) => e.status === 'ativo')
-  }, [emprestimos, filtro])
+    const porAba = (() => {
+      if (filtro === 'todos') return emprestimos
+      if (filtro === 'atrasados') return emprestimos.filter((e) => statusExibicao(e) === 'atrasado')
+      if (filtro === 'a-vencer') return emprestimos.filter((e) => statusExibicao(e) === 'a-vencer')
+      return emprestimos.filter((e) => e.status === 'ativo')
+    })()
+
+    const termo = normalizarTexto(busca.trim())
+    if (!termo) return porAba
+
+    return porAba.filter((emprestimo) => {
+      const aluno = alunos.find((item) => item.id === emprestimo.alunoId)
+      const livro = livros.find((item) => item.id === emprestimo.livroId)
+      return (
+        (aluno && normalizarTexto(aluno.nome).includes(termo)) ||
+        (livro && normalizarTexto(livro.titulo).includes(termo))
+      )
+    })
+  }, [emprestimos, filtro, busca, alunos, livros])
 
   const handleRegistrar = (alunoId: string, livroId: string) => {
     const resultado = registrar(alunoId, livroId)
@@ -48,6 +69,13 @@ export const EmprestimosPage = () => {
         </Button>
       </div>
 
+      <Input
+        placeholder="Buscar por aluno ou livro..."
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+        className="max-w-sm"
+      />
+
       <Tabs value={filtro} onValueChange={(valor) => setFiltro(valor as Filtro)}>
         <TabsList className="w-full overflow-x-auto sm:w-fit">
           {ABAS.map((aba) => (
@@ -58,7 +86,7 @@ export const EmprestimosPage = () => {
         </TabsList>
       </Tabs>
 
-      <div className="rounded-lg border border-border bg-white">
+      <div className="overflow-x-auto rounded-lg border border-border bg-white">
         <EmprestimoTable emprestimos={emprestimosFiltrados} />
       </div>
 

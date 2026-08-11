@@ -14,8 +14,6 @@ interface EmprestimosContextValor {
   registrar: (alunoId: string, livroId: string) => ResultadoAcao
   devolver: (id: string) => ResultadoAcao
   renovar: (id: string) => ResultadoAcao
-  alunoTemEmprestimoAtivo: (alunoId: string) => boolean
-  livroTemEmprestimoAtivo: (livroId: string) => boolean
 }
 
 const EmprestimosContext = createContext<EmprestimosContextValor | null>(null)
@@ -84,18 +82,8 @@ export const EmprestimosProvider = ({ children }: { children: ReactNode }) => {
     return { sucesso: true }
   }
 
-  // usado pra bloquear exclusão de aluno/livro com empréstimo em aberto — evita registros
-  // órfãos (ex.: devolução de um livro já excluído nunca restauraria a disponibilidade)
-  const alunoTemEmprestimoAtivo = (alunoId: string) =>
-    emprestimosBrutos.some((item) => item.alunoId === alunoId && !item.dataDevolucao)
-
-  const livroTemEmprestimoAtivo = (livroId: string) =>
-    emprestimosBrutos.some((item) => item.livroId === livroId && !item.dataDevolucao)
-
   return (
-    <EmprestimosContext.Provider
-      value={{ emprestimos, registrar, devolver, renovar, alunoTemEmprestimoAtivo, livroTemEmprestimoAtivo }}
-    >
+    <EmprestimosContext.Provider value={{ emprestimos, registrar, devolver, renovar }}>
       {children}
     </EmprestimosContext.Provider>
   )
