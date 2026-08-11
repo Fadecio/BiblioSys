@@ -1,75 +1,60 @@
-# React + TypeScript + Vite
+# BiblioSys
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de gerenciamento de biblioteca escolar: um dashboard interno para controlar o cadastro de alunos, livros e empréstimos, com indicadores consolidados.
 
-Currently, two official plugins are available:
+Deploy: https://biblio-sys.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Funcionalidades
 
-## React Compiler
+- **Dashboard**: cards de indicadores e gráfico dos livros mais procurados.
+- **Alunos**: cadastro, edição, exclusão e busca (tolerante a acentos).
+- **Livros**: cadastro, edição, exclusão e busca, com controle de quantidade total/disponível.
+- **Empréstimos**: registrar, renovar e devolver, com status calculado automaticamente (em dia, a vencer, atrasado, devolvido) e filtro por status.
+- Campos de aluno/livro do formulário de empréstimo com busca via combobox.
+- Bloqueio de exclusão de aluno/livro com empréstimo ativo vinculado.
+- Layout responsivo: sidebar fixa no desktop e gaveta lateral (sheet) no mobile.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tecnologias
 
-## Expanding the ESLint configuration
+- React 19 + TypeScript
+- Vite
+- Tailwind CSS + shadcn/ui (Radix)
+- React Router
+- Recharts (gráficos)
+- date-fns
+- Persistência em `localStorage`, isolada em uma camada de `services/`
+- Context API + hooks customizados para estado global (alunos, livros, empréstimos)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Estrutura de pastas
 
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+src/
+├── components/   # Componentes de UI e de domínio (formulários, tabelas, sidebar etc.)
+├── hooks/        # Contexts + hooks customizados (useAlunos, useLivros, useEmprestimos)
+├── lib/          # Utilidades e configurações compartilhadas
+├── pages/        # Páginas da aplicação (Dashboard, Alunos, Livros, Empréstimos)
+├── services/     # Camada de acesso a dados (localStorage)
+├── types/        # Tipagens TypeScript do domínio
+└── utils/        # Funções auxiliares (status de empréstimo, normalização de texto etc.)
 ```
+
+## Como executar localmente
+
+Pré-requisitos: Node.js instalado.
+
+```bash
+npm install
+npm run dev
+```
+
+A aplicação ficará disponível em `http://localhost:5173` (porta padrão do Vite).
+
+### Outros scripts
+
+- `npm run build` — gera o build de produção
+- `npm run lint` — executa o ESLint
+- `npm run preview` — pré-visualiza o build de produção localmente
+
+## Documentação adicional
+
+O arquivo [DESIGN.md](./DESIGN.md) reúne as decisões de design e arquitetura do projeto, além do histórico de alterações.
