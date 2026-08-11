@@ -53,7 +53,10 @@ export const LivrosPage = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Livros</h1>
-          <p className="text-sm text-muted-foreground">Acervo da biblioteca e disponibilidade de exemplares.</p>
+          <p className="text-sm text-muted-foreground">
+            Acervo da biblioteca e disponibilidade de exemplares. {livrosFiltrados.length}{' '}
+            {livrosFiltrados.length === 1 ? 'título' : 'títulos'}.
+          </p>
         </div>
         <Button onClick={abrirNovo} className="sm:self-start">
           <Plus className="size-4" />

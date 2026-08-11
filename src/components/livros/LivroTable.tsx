@@ -30,6 +30,7 @@ export const LivroTable = ({ livros, onEditar, onExcluir }: LivroTableProps) => 
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead className="w-12">Nº</TableHead>
           <TableHead>Título</TableHead>
           <TableHead>Autor</TableHead>
           <TableHead>Categoria</TableHead>
@@ -39,9 +40,10 @@ export const LivroTable = ({ livros, onEditar, onExcluir }: LivroTableProps) => 
         </TableRow>
       </TableHeader>
       <TableBody>
-        {livros.map((livro) => {
+        {livros.map((livro, index) => {
           return (
             <TableRow key={livro.id}>
+              <TableCell className="text-muted-foreground">{index + 1}</TableCell>
               <TableCell className="font-medium text-foreground">{livro.titulo}</TableCell>
               <TableCell>{livro.autor}</TableCell>
               <TableCell>{livro.categoria}</TableCell>

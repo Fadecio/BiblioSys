@@ -109,6 +109,17 @@ Radix), sem introduzir nenhuma lib nova:
 
 ## Histórico de alterações
 
+### 2026-08-11 — Numeração dos livros na tabela
+- **Pedido:** além da ordenação alfabética por título já existente, o usuário
+  pediu uma numeração visível para ter controle da quantidade de títulos
+  cadastrados.
+- **Implementação:** adicionada coluna "Nº" em `LivroTable.tsx`, exibindo a
+  posição sequencial (`index + 1`) de cada linha — a numeração segue a ordem
+  já aplicada em `LivrosPage.tsx` (alfabética por título, `localeCompare`
+  pt-BR), então reflete a lista filtrada/ordenada atual, não um ID fixo do
+  livro. Adicionado também um contador de total de títulos ("N títulos") no
+  cabeçalho da página, ao lado da descrição.
+
 ### 2026-08-09 — Correção: gráfico do dashboard "piscando" ao carregar
 - **Sintoma:** o gráfico "livros mais procurados" nascia visivelmente menor e
   "saltava" pro tamanho final logo após o carregamento — introduzido pela
