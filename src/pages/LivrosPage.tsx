@@ -6,27 +6,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { LivroForm } from '@/components/livros/LivroForm'
 import { LivroTable } from '@/components/livros/LivroTable'
 import { useLivros, type DadosLivro } from '@/hooks/useLivros'
-import { useEmprestimos } from '@/hooks/useEmprestimos'
 import { normalizarTexto } from '@/utils/texto'
 import type { Livro } from '@/types'
 
 export const LivrosPage = () => {
   const { livros, adicionar, atualizar, remover } = useLivros()
-  const { livroTemEmprestimoAtivo } = useEmprestimos()
   const [busca, setBusca] = useState('')
   const [dialogAberto, setDialogAberto] = useState(false)
   const [livroEmEdicao, setLivroEmEdicao] = useState<Livro | undefined>(undefined)
 
   const livrosFiltrados = useMemo(() => {
     const termo = normalizarTexto(busca.trim())
-    if (!termo) return livros
-    return livros.filter(
-      (livro) =>
-        normalizarTexto(livro.titulo).includes(termo) ||
-        normalizarTexto(livro.autor).includes(termo) ||
-        normalizarTexto(livro.categoria).includes(termo) ||
-        normalizarTexto(livro.codigo).includes(termo),
-    )
+    const filtrados = termo
+      ? livros.filter(
+          (livro) =>
+            normalizarTexto(livro.titulo).includes(termo) ||
+            normalizarTexto(livro.autor).includes(termo) ||
+            normalizarTexto(livro.categoria).includes(termo) ||
+            normalizarTexto(livro.codigo).includes(termo),
+        )
+      : livros
+    return [...filtrados].sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'))
   }, [livros, busca])
 
   const abrirNovo = () => {
@@ -68,13 +68,8 @@ export const LivrosPage = () => {
         className="max-w-sm"
       />
 
-      <div className="rounded-lg border border-border bg-white">
-        <LivroTable
-          livros={livrosFiltrados}
-          onEditar={abrirEdicao}
-          onExcluir={remover}
-          temEmprestimoAtivo={livroTemEmprestimoAtivo}
-        />
+      <div className="overflow-x-auto rounded-lg border border-border bg-white">
+        <LivroTable livros={livrosFiltrados} onEditar={abrirEdicao} onExcluir={remover} />
       </div>
 
       <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>

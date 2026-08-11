@@ -19,10 +19,9 @@ interface LivroTableProps {
   livros: Livro[]
   onEditar: (livro: Livro) => void
   onExcluir: (id: string) => void
-  temEmprestimoAtivo: (livroId: string) => boolean
 }
 
-export const LivroTable = ({ livros, onEditar, onExcluir, temEmprestimoAtivo }: LivroTableProps) => {
+export const LivroTable = ({ livros, onEditar, onExcluir }: LivroTableProps) => {
   if (livros.length === 0) {
     return <p className="py-10 text-center text-sm text-muted-foreground">Nenhum livro encontrado.</p>
   }
@@ -41,8 +40,6 @@ export const LivroTable = ({ livros, onEditar, onExcluir, temEmprestimoAtivo }: 
       </TableHeader>
       <TableBody>
         {livros.map((livro) => {
-          const bloqueado = temEmprestimoAtivo(livro.id)
-
           return (
             <TableRow key={livro.id}>
               <TableCell className="font-medium text-foreground">{livro.titulo}</TableCell>
@@ -60,13 +57,7 @@ export const LivroTable = ({ livros, onEditar, onExcluir, temEmprestimoAtivo }: 
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label="Excluir livro"
-                      disabled={bloqueado}
-                      title={bloqueado ? 'Livro possui empréstimo em aberto — não pode ser excluído' : undefined}
-                    >
+                    <Button variant="ghost" size="icon-sm" aria-label="Excluir livro">
                       <Trash2 className="size-4" />
                     </Button>
                   </AlertDialogTrigger>
