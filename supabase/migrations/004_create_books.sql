@@ -1,4 +1,3 @@
--- 004_create_books.sql
 
 create table if not exists public.books (
   id uuid primary key default gen_random_uuid(),
@@ -22,6 +21,3 @@ create table if not exists public.books (
 
 comment on table public.books is 'Títulos do acervo. total_copies = exemplares fisicamente existentes; available_copies = exemplares livres para empréstimo.';
 comment on column public.books.available_copies is 'Nunca pode ficar negativo nem ultrapassar total_copies (garantido por CHECK e pelos triggers de empréstimo/devolução).';
-
--- author_id/category_id usam ON DELETE SET NULL: remover um autor/categoria não deve apagar o
--- livro do acervo nem quebrar o histórico de empréstimos associado a ele.

@@ -1,4 +1,3 @@
--- 003_create_categories.sql
 
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),

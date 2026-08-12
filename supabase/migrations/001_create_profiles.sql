@@ -1,6 +1,3 @@
--- 001_create_profiles.sql
--- Perfil do usuário autenticado (Supabase Auth). Não duplica dados que já existem em
--- auth.users (email, senha, etc.) — guarda só o que é específico da aplicação.
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
@@ -14,7 +11,7 @@ create table if not exists public.profiles (
 comment on table public.profiles is 'Perfil da aplicação para cada usuário autenticado via Supabase Auth.';
 comment on column public.profiles.role is 'Nível de acesso: admin (controle total), librarian (opera o dia a dia da biblioteca), student (acesso restrito/futuro).';
 
--- cria automaticamente um profile quando um novo usuário se cadastra no Supabase Auth
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql

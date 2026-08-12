@@ -1,7 +1,3 @@
--- supabase/seed.sql
--- Dados fictícios para desenvolvimento/demo (BD.md §12). Usa UUIDs fixos para que o arquivo
--- seja idempotente (rodar de novo não duplica linhas) e para tornar os relacionamentos legíveis.
--- NÃO rode isto em produção.
 
 -- ── authors (10) ──────────────────────────────────────────────────────────
 insert into public.authors (id, name, biography) values
@@ -29,8 +25,6 @@ insert into public.categories (id, name, description) values
   ('c0000000-0000-0000-0000-000000000008', 'Quadrinhos', 'Histórias em quadrinhos e graphic novels.')
 on conflict (id) do nothing;
 
--- ── books (20) — total_copies/available_copies iniciais; os empréstimos abaixo já
--- descontam a disponibilidade via trigger, então os valores aqui refletem apenas o total ──
 insert into public.books (id, title, isbn, code, publisher, publication_year, total_copies, available_copies, author_id, category_id) values
   ('b0000000-0000-0000-0000-000000000001', 'Dom Casmurro', '9788535910663', 'LIT-001', 'Companhia das Letras', 1899, 3, 3, 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001'),
   ('b0000000-0000-0000-0000-000000000002', 'Memórias Póstumas de Brás Cubas', '9788535910670', 'LIT-002', 'Companhia das Letras', 1881, 2, 2, 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001'),
@@ -74,9 +68,6 @@ insert into public.students (id, name, registration_number, class, grade, active
 on conflict (id) do nothing;
 
 -- ── loans ─────────────────────────────────────────────────────────────────
--- Insere direto (não via register_loan()) pra poder controlar loan_date/due_date/return_date
--- no passado/futuro e simular os 3 cenários pedidos: ativos, devolvidos e atrasados.
--- Os triggers de 009 continuam rodando (validam e ajustam available_copies normalmente).
 insert into public.loans (id, book_id, student_id, loan_date, due_date, return_date, status) values
   -- ativos (dentro do prazo)
   ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001', current_date - 3, current_date + 4, null, 'borrowed'),
@@ -95,9 +86,6 @@ insert into public.loans (id, book_id, student_id, loan_date, due_date, return_d
   ('e0000000-0000-0000-0000-000000000012', 'b0000000-0000-0000-0000-000000000005', 'd0000000-0000-0000-0000-000000000013', current_date - 30, current_date - 23, current_date - 22, 'returned')
 on conflict (id) do nothing;
 
--- ajusta available_copies dos livros com empréstimo em aberto (os triggers só disparam em
--- INSERT/UPDATE feitos via API normal; este seed insere direto com return_date já preenchido
--- nalguns casos, então recalculamos aqui pra garantir consistência determinística)
 update public.books b
 set available_copies = b.total_copies - coalesce((
   select count(*) from public.loans l where l.book_id = b.id and l.return_date is null

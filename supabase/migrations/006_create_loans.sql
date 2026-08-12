@@ -1,4 +1,3 @@
--- 006_create_loans.sql
 
 create table if not exists public.loans (
   id uuid primary key default gen_random_uuid(),
@@ -16,6 +15,3 @@ create table if not exists public.loans (
 
 comment on table public.loans is 'Histórico de empréstimos/devoluções. status é mantido em sincronia por trigger, mas a fonte de verdade para "atrasado" é a view overdue_loans (return_date IS NULL AND due_date < CURRENT_DATE).';
 
--- book_id/student_id usam ON DELETE RESTRICT: um livro ou aluno com empréstimos no histórico
--- não pode ser excluído, para não perder o histórico (livro "desativar" em vez de apagar, se
--- necessário, é uma decisão de produto fora do escopo deste MVP).

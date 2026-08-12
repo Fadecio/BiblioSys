@@ -1,4 +1,3 @@
--- 005_create_students.sql
 
 create table if not exists public.students (
   id uuid primary key default gen_random_uuid(),

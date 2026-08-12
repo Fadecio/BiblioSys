@@ -1,4 +1,3 @@
--- 002_create_authors.sql
 
 create table if not exists public.authors (
   id uuid primary key default gen_random_uuid(),

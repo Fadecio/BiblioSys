@@ -1,7 +1,3 @@
--- 010_create_views.sql
--- "Atrasado" nunca é lido de loans.status (que é só uma cópia sincronizada por conveniência,
--- ver sync_overdue_loans em 008) — as views abaixo recalculam a partir de return_date/due_date,
--- que são a fonte de verdade real (BD.md §3).
 
 create or replace view public.overdue_loans as
 select

@@ -1,6 +1,4 @@
--- 008_create_functions.sql
 
--- genérica: mantém updated_at sincronizado em qualquer tabela que tenha a coluna
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -11,8 +9,6 @@ begin
 end;
 $$;
 
--- helper para as políticas de RLS: lê o role do usuário autenticado sem recursão
--- (security definer evita que a policy de SELECT em profiles precise chamar a si mesma)
 create or replace function public.get_my_role()
 returns text
 language sql
@@ -33,9 +29,6 @@ as $$
   select coalesce(public.get_my_role() in ('admin', 'librarian'), false);
 $$;
 
--- regra de empréstimo (BD.md §3): valida disponibilidade e aluno ativo, calcula loan_date/due_date
--- e status="borrowed"; a baixa em available_copies fica no trigger trg_loans_after_insert (009),
--- assim ela vale também para inserts feitos fora desta função.
 create or replace function public.register_loan(
   p_book_id uuid,
   p_student_id uuid,
@@ -75,8 +68,6 @@ begin
 end;
 $$;
 
--- regra de devolução (BD.md §3): idempotente — devolver duas vezes levanta erro em vez de
--- silenciosamente não fazer nada, para a UI poder mostrar mensagem clara.
 create or replace function public.return_loan(p_loan_id uuid)
 returns public.loans
 language plpgsql
@@ -103,10 +94,6 @@ begin
 end;
 $$;
 
--- sincroniza o status armazenado dos empréstimos vencidos e ainda não devolvidos.
--- A fonte de verdade continua sendo a view v_overdue_loans (calculada on-the-fly); esta
--- função é só uma conveniência para quem quiser filtrar loans.status = 'overdue' direto,
--- e pode ser agendada (pg_cron) ou chamada manualmente — não é executada por trigger.
 create or replace function public.sync_overdue_loans()
 returns void
 language sql

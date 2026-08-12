@@ -1,6 +1,4 @@
--- 009_create_triggers.sql
 
--- updated_at automático
 drop trigger if exists trg_profiles_updated_at on public.profiles;
 create trigger trg_profiles_updated_at
   before update on public.profiles
@@ -21,8 +19,6 @@ create trigger trg_loans_updated_at
   before update on public.loans
   for each row execute function public.set_updated_at();
 
--- valida a regra de empréstimo mesmo para inserts feitos fora de register_loan() (008)
--- (ex.: via dashboard do Supabase) — mantém a garantia no banco, não só na função de conveniência.
 create or replace function public.trg_loans_validate_insert()
 returns trigger
 language plpgsql
@@ -56,7 +52,6 @@ create trigger trg_loans_before_insert
   before insert on public.loans
   for each row execute function public.trg_loans_validate_insert();
 
--- baixa o exemplar disponível ao criar o empréstimo
 create or replace function public.trg_loans_after_insert()
 returns trigger
 language plpgsql
@@ -72,8 +67,6 @@ create trigger trg_loans_after_insert
   after insert on public.loans
   for each row execute function public.trg_loans_after_insert();
 
--- impede devolver o mesmo empréstimo duas vezes (mesmo via UPDATE direto, fora de return_loan())
--- e mantém status="returned" coerente com return_date preenchida
 create or replace function public.trg_loans_before_update()
 returns trigger
 language plpgsql
@@ -96,7 +89,6 @@ create trigger trg_loans_before_update
   before update on public.loans
   for each row execute function public.trg_loans_before_update();
 
--- devolve o exemplar disponível quando o empréstimo é marcado como devolvido
 create or replace function public.trg_loans_after_update()
 returns trigger
 language plpgsql
