@@ -18,22 +18,28 @@ interface EmprestimoTableProps {
 }
 
 export const EmprestimoTable = ({ emprestimos }: EmprestimoTableProps) => {
-  const { alunos } = useAlunos()
-  const { livros } = useLivros()
+  const { alunos, carregando: carregandoAlunos } = useAlunos()
+  const { livros, carregando: carregandoLivros } = useLivros()
   const { devolver, renovar } = useEmprestimos()
   const [erro, setErro] = useState('')
+
+  // evita mostrar "Aluno/Livro removido" por engano enquanto os dados relacionados ainda
+  // estão chegando do Supabase (localStorage nunca tinha essa janela de carregamento)
+  if (carregandoAlunos || carregandoLivros) {
+    return <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
+  }
 
   if (emprestimos.length === 0) {
     return <p className="py-10 text-center text-sm text-muted-foreground">Nenhum empréstimo encontrado.</p>
   }
 
-  const handleDevolver = (id: string) => {
-    const resultado = devolver(id)
+  const handleDevolver = async (id: string) => {
+    const resultado = await devolver(id)
     setErro(!resultado.sucesso ? (resultado.mensagem ?? '') : '')
   }
 
-  const handleRenovar = (id: string) => {
-    const resultado = renovar(id)
+  const handleRenovar = async (id: string) => {
+    const resultado = await renovar(id)
     setErro(!resultado.sucesso ? (resultado.mensagem ?? '') : '')
   }
 

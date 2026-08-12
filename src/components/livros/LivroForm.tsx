@@ -3,12 +3,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
-import type { Livro } from '@/types'
+import type { Livro, ResultadoAcao } from '@/types'
 import type { DadosLivro } from '@/hooks/useLivros'
 
 interface LivroFormProps {
   valorInicial?: Livro
-  onSalvar: (dados: DadosLivro) => void
+  onSalvar: (dados: DadosLivro) => Promise<ResultadoAcao>
   onCancelar: () => void
 }
 
@@ -20,7 +20,7 @@ export const LivroForm = ({ valorInicial, onSalvar, onCancelar }: LivroFormProps
   const [quantidadeTotal, setQuantidadeTotal] = useState(String(valorInicial?.quantidadeTotal ?? 1))
   const [erro, setErro] = useState('')
 
-  const handleSubmit = (evento: SubmitEvent) => {
+  const handleSubmit = async (evento: SubmitEvent) => {
     evento.preventDefault()
 
     const total = Number(quantidadeTotal)
@@ -42,13 +42,14 @@ export const LivroForm = ({ valorInicial, onSalvar, onCancelar }: LivroFormProps
       }
     }
 
-    onSalvar({
+    const resultado = await onSalvar({
       titulo: titulo.trim(),
       autor: autor.trim(),
       categoria: categoria.trim(),
       codigo: codigo.trim(),
       quantidadeTotal: total,
     })
+    if (!resultado.sucesso) setErro(resultado.mensagem ?? 'Não foi possível salvar o livro.')
   }
 
   return (

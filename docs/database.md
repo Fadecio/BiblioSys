@@ -1,9 +1,9 @@
 # Banco de dados — BiblioSys
 
-Documentação do schema Supabase (PostgreSQL) criado a partir de `BD.md`. O MVP atual do
-frontend continua rodando 100% sobre `localStorage` (ver `src/services/storage.ts`) — este
-banco é a base para a migração incremental descrita em [Integração com o frontend](#integração-com-o-frontend-v2)
-e no roadmap V2 do `spec.md`. Nenhuma tela ou hook existente foi alterado por este trabalho.
+Documentação do schema Supabase (PostgreSQL) criado a partir de `BD.md`. O frontend lê e
+escreve direto no Supabase (`useAlunos`/`useLivros`/`useEmprestimos`, via `src/services/`) —
+o antigo `services/storage.ts` sobre `localStorage` foi removido. Ver
+[Camada de acesso (frontend)](#camada-de-acesso-frontend) pra como isso está organizado.
 
 ## Diagrama
 
@@ -31,9 +31,9 @@ que tem empréstimo no histórico).
 | `profiles` | `id` (= `auth.users.id`), `full_name`, `email`, `role` | Criada automaticamente por trigger quando um usuário se cadastra no Supabase Auth. `role` ∈ `admin`, `librarian`, `student`. |
 | `authors` | `id`, `name`, `biography` | |
 | `categories` | `id`, `name` (único), `description` | |
-| `books` | `title`, `isbn` (único), `total_copies`, `available_copies`, `author_id`, `category_id` | `available_copies` nunca é maior que `total_copies` nem negativo (CHECK + triggers). |
-| `students` | `name`, `registration_number` (único), `class`, `active` | Aluno é **dado gerenciado**, não usuário autenticado, no MVP. `active = false` bloqueia novos empréstimos. |
-| `loans` | `book_id`, `student_id`, `loan_date`, `due_date`, `return_date`, `status` | `status` ∈ `borrowed`, `returned`, `overdue` — mas a fonte de verdade pra "atrasado" é a view `overdue_loans`, não a coluna (ver [Regras de negócio](#regras-de-negócio)). |
+| `books` | `title`, `isbn` (único), `code`, `total_copies`, `available_copies`, `author_id`, `category_id` | `available_copies` nunca é maior que `total_copies` nem negativo (CHECK + triggers). `code` (migration 012) é o código interno do acervo (ex. "LIT-001"), separado do `isbn` real. |
+| `students` | `name`, `registration_number` (único, gerado automaticamente), `class`, `grade`, `active` | Aluno é **dado gerenciado**, não usuário autenticado, no MVP. `active = false` bloqueia novos empréstimos. `grade` (série, migration 012) é independente de `class` (turma). `registration_number` tem `DEFAULT` via sequence (`ALU-00001`...) porque a tela de Alunos não coleta matrícula. |
+| `loans` | `book_id`, `student_id`, `loan_date`, `due_date`, `return_date`, `status`, `renewals` | `status` ∈ `borrowed`, `returned`, `overdue` — mas a fonte de verdade pra "atrasado" é a view `overdue_loans`, não a coluna (ver [Regras de negócio](#regras-de-negócio)). `renewals` (migration 012) conta renovações, incrementado por `renew_loan()`. |
 
 ## Relacionamentos
 
@@ -65,6 +65,16 @@ Implementada na função `return_loan(p_loan_id)` e reforçada por triggers em `
 3. Um trigger `AFTER UPDATE` incrementa `books.available_copies` em 1 quando `return_date`
    passa de `NULL` para preenchida.
 
+### Renovação
+
+Implementada na função `renew_loan(p_loan_id, p_extra_days default 7)` (migration 012 —
+não existia no schema original de `BD.md`; foi adicionada porque o frontend já tinha essa
+funcionalidade desde o MVP em `localStorage`, ver `src/utils/emprestimo.ts`):
+
+1. Levanta erro se o empréstimo já tiver sido devolvido.
+2. Levanta erro se `due_date < hoje` (atrasado precisa ser devolvido primeiro, não renovado).
+3. Estende `due_date` em `p_extra_days` e incrementa `renewals`.
+
 ### Atrasos
 
 **Decisão de design:** atraso é *calculado*, não armazenado como fonte de verdade — evita
@@ -87,6 +97,7 @@ public.sync_overdue_loans();` (útil se algum relatório preferir filtrar
 |---|---|
 | `register_loan(p_book_id, p_student_id, p_loan_days=7)` | Cria um empréstimo validando disponibilidade e aluno ativo. |
 | `return_loan(p_loan_id)` | Registra devolução, bloqueando devolução duplicada. |
+| `renew_loan(p_loan_id, p_extra_days=7)` | Estende `due_date`, bloqueando renovação de atrasado/devolvido (migration 012). |
 | `sync_overdue_loans()` | Atualiza `loans.status = 'overdue'` para empréstimos vencidos (opcional/manual). |
 | `get_my_role()` / `is_staff()` | Helpers de RLS — leem o `role` do usuário autenticado. |
 | `set_updated_at()` | Genérica, usada pelos triggers de `updated_at`. |
@@ -129,21 +140,27 @@ duplicado).
 
 ## RLS (Row Level Security)
 
-RLS habilitado em todas as 6 tabelas. Nenhuma policy usa `USING (true)`. Papéis
-considerados: **admin** e **librarian** (funcionário da biblioteca) operam o sistema;
-**student** é preparado pro futuro mas hoje não tem policy nas tabelas operacionais, porque
-não existe vínculo aluno↔usuário autenticado no MVP (aluno é dado, não login).
+RLS habilitado em todas as 6 tabelas. Papéis considerados: **admin** e **librarian**
+(funcionário da biblioteca) operam o sistema; **student** é preparado pro futuro mas hoje
+não tem policy nas tabelas operacionais, porque não existe vínculo aluno↔usuário
+autenticado no MVP (aluno é dado, não login).
+
+A tabela abaixo já reflete a migration **013** (`013_relax_rls_for_anon.sql`), que libera o
+role `anon` — necessário porque o frontend V1 não tem login (ver
+[Sobre autenticação](#sobre-autenticação-por-que-existe-a-migration-013)):
 
 | Tabela | Select | Insert/Update | Delete |
 |---|---|---|---|
 | `profiles` | dono da linha ou staff | dono só pode editar a própria linha (role protegida por trigger) | ninguém |
-| `authors`, `categories`, `books` | qualquer autenticado | só admin/librarian | só admin/librarian |
-| `students` | só admin/librarian | só admin/librarian | só admin/librarian |
-| `loans` | só admin/librarian | só admin/librarian | só admin |
+| `authors`, `categories`, `books` | qualquer autenticado ou `anon` | `anon` ou admin/librarian | `anon` ou admin/librarian |
+| `students` | `anon` ou admin/librarian | `anon` ou admin/librarian | `anon` ou admin/librarian |
+| `loans` | `anon` ou admin/librarian | `anon` ou admin/librarian | `anon` ou admin |
 
 Por que catálogo (`authors`/`categories`/`books`) é legível por qualquer autenticado: não é
 dado sensível e uma futura tela de consulta do aluno vai precisar ler isso. `students` e
-`loans` guardam dado pessoal (nome, telefone, histórico), por isso ficam restritos à equipe.
+`loans` guardam dado pessoal (nome, telefone, histórico) — em condições normais (com login)
+ficariam restritos à equipe; hoje ficam abertos pra `anon` pelo mesmo motivo de tudo o mais
+(sem login, não há como distinguir "o bibliotecário" de qualquer outro chamador).
 
 ## Autenticação (Supabase Auth)
 
@@ -154,9 +171,15 @@ dado sensível e uma futura tela de consulta do aluno vai precisar ler isso. `st
 
 ## Como executar as migrations
 
-As migrations estão numeradas em `supabase/migrations/001_...sql` a `011_...sql` e devem
+As migrations estão numeradas em `supabase/migrations/001_...sql` a `013_...sql` e devem
 rodar **nessa ordem**, uma vez cada (não são idempotentes — `CREATE POLICY`, por exemplo,
 falha se rodar duas vezes; `seed.sql`, sim, é idempotente).
+
+> Se seu projeto já tinha as migrations 001–011 aplicadas antes de 2026-08-12, falta rodar
+> a **012** (`012_add_grade_code_renewals.sql`: `students.grade`, `books.code`,
+> `loans.renewals`/`renew_loan()`, `DEFAULT` automático de `students.registration_number`)
+> e a **013** (`013_relax_rls_for_anon.sql`: sem essa, o app carrega listas vazias — ver
+> [Sobre autenticação](#sobre-autenticação-por-que-existe-a-migration-013)).
 
 **Opção A — SQL Editor do Supabase (mais simples, sem instalar nada):**
 Abra cada arquivo em `supabase/migrations/`, na ordem, e rode o conteúdo no SQL Editor do
@@ -195,73 +218,79 @@ usada em um contexto de servidor/admin, que este projeto não tem hoje.
 ```
 src/
 ├── lib/
-│   └── supabase.ts          # cliente único, lê as env vars
+│   └── supabase.ts          # cliente único, lê as env vars (lança erro claro se ausentes)
 ├── services/
-│   ├── errors.ts            # traduz erro do Postgres/Supabase em mensagem pra UI
+│   ├── errors.ts            # traduz erro do Postgres/Supabase em ServiceError com mensagem pra UI
 │   ├── authors.service.ts
 │   ├── categories.service.ts
-│   ├── books.service.ts
+│   ├── books.service.ts     # createFromNames/updateFromNames resolvem autor/categoria por nome
 │   ├── students.service.ts
-│   ├── loans.service.ts     # register()/returnLoan() chamam as RPCs do banco
+│   ├── loans.service.ts     # register()/returnLoan()/renew() chamam as RPCs do banco
 │   └── dashboard.service.ts # lê a view dashboard_stats
 └── types/
-    └── database.types.ts    # tipos do schema (mão, até existir project-id pra gerar via CLI)
+    └── database.types.ts    # tipos do schema (à mão, até existir project-id pra gerar via CLI)
 ```
 
-Esses arquivos são **aditivos**: ainda não são usados pelos hooks/páginas atuais
-(`useAlunos`, `useLivros`, `useEmprestimos` continuam sobre `localStorage`). Ver próxima
-seção pra saber o que falta pra ligar um ao outro.
+`useAlunos`/`useLivros`/`useEmprestimos` (`src/hooks/`) usam esses services diretamente —
+não há mais `localStorage` no projeto. Cada hook busca os dados no mount (`useEffect`),
+expõe `carregando`/`erro`, e as mutações (`adicionar`/`atualizar`/`remover`/`registrar`/
+`devolver`/`renovar`) retornam `Promise<{ sucesso, mensagem? }>` em vez de `void`, porque
+uma chamada de rede pode falhar de formas que `localStorage` nunca falhava (offline, RLS,
+dado duplicado) — os formulários (`AlunoForm`, `LivroForm`, `EmprestimoForm`) e as tabelas
+mostram essa mensagem inline (`text-destructive`), mesmo padrão que já existia em Empréstimos.
 
-## Integração com o frontend (V2)
+**Mapeamento de campos** (a UI continua 100% em português, sem nenhuma tela alterada):
 
-O que existe hoje no MVP, olhando `src/services/storage.ts` e os hooks em `src/hooks/`:
+| Frontend (`src/types/index.ts`) | Banco | Observação |
+|---|---|---|
+| `Aluno.nome/turma/serie` | `students.name/class/grade` | `registration_number` nunca é enviado pelo frontend — o banco gera sozinho. |
+| `Livro.autor` (texto livre) | `books.author_id` → `authors.name` | `booksService.createFromNames` resolve nome → linha existente ou nova (upsert por `authors.name`, que é `UNIQUE`). |
+| `Livro.categoria` (texto livre) | `books.category_id` → `categories.name` | Mesma resolução, via `categories.name` (`UNIQUE`). |
+| `Livro.codigo` | `books.code` | Independente de `isbn`. |
+| `Emprestimo.*` | `loans.*` | Mapeamento direto; `status` do banco é só ponto de partida — `derivarStatus()` (`utils/emprestimo.ts`) sempre recalcula a partir da data atual, como já fazia sobre `localStorage`. |
 
-- **Dados em `localStorage`, não em arrays em memória**: `bibliosys:alunos`,
-  `bibliosys:livros`, `bibliosys:emprestimos`, geridos por `useAlunos`, `useLivros`,
-  `useEmprestimos` (Context API).
-- **Modelagem em português, achatada**: `Livro.autor` e `Livro.categoria` são `string`
-  livre, não FK — o banco novo normaliza isso em `authors`/`categories`. Migrar exige
-  decidir como resolver os textos livres existentes para linhas de `authors`/`categories`
-  (ex.: `INSERT ... ON CONFLICT DO NOTHING` a partir dos valores distintos já cadastrados).
-- **Regras de negócio replicadas**: `src/utils/emprestimo.ts` (status derivado, prazo de 7
-  dias, renovação) tem equivalente no banco (`register_loan`/`return_loan`/view
-  `overdue_loans`), exceto **renovação**, que o schema atual não modela — é a única
-  funcionalidade do frontend sem equivalente pronto no banco (ver nota abaixo).
+**Coordenação entre hooks:** `useEmprestimos` chama `useLivros().recarregar()` depois de um
+`registrar`/`devolver` bem-sucedido, porque `available_copies` muda no banco via trigger
+(não no cliente) — sem isso, a lista de livros em memória ficaria com a disponibilidade
+desatualizada até a próxima navegação.
 
-O que precisaria mudar pra migrar de fato (não feito neste trabalho, por ser uma troca de
-fonte de dados arriscada sem um projeto Supabase real pra testar contra):
-
-1. Trocar o corpo de `useAlunos`/`useLivros`/`useEmprestimos` pra chamar
-   `studentsService`/`booksService`/`loansService` em vez de `storage.ts`, mantendo a
-   mesma interface pública dos hooks (o resto do app não precisa saber da troca).
-2. Mapear os campos em português da UI (`nome`, `titulo`, `matricula`...) pros nomes em
-   inglês do banco (`name`, `title`, `registration_number`...) — uma camada fina de adapter
-   dentro dos hooks, não espalhada pelos componentes.
-3. Adicionar uma migration extra pra **renovação de empréstimo** (estender `due_date` de um
-   empréstimo em aberto), já que `BD.md` não pediu essa regra explicitamente e o schema
-   atual não tem uma função pra isso — hoje só existe no frontend
-   (`renovarEmprestimo` em `src/utils/emprestimo.ts`).
-4. Trocar `AlunosProvider`/`LivrosProvider`/`EmprestimosProvider` de `useState` síncrono
-   pra um estado assíncrono (loading/error), já que toda leitura passa a ser uma chamada de
-   rede.
+**Limitação conhecida:** `resolveAuthorId`/`resolveCategoryId` (upsert por nome) não são
+atômicos entre si nem protegidos por transação explícita — em uso normal (poucos
+bibliotecários, não muitos saves simultâneos do mesmo autor/categoria) isso não é um
+problema real; o `UNIQUE` em `authors.name`/`categories.name` garante que o pior caso é uma
+constraint reprovando uma corrida rara, não duplicação silenciosa.
 
 ## Próximos passos no painel do Supabase
 
-1. Criar um projeto em [app.supabase.com](https://app.supabase.com).
-2. Rodar as 11 migrations em ordem (SQL Editor ou CLI, ver acima).
-3. Rodar `supabase/seed.sql` pra ter dados de demonstração.
-4. Copiar `Project URL` e `anon public key` de **Settings → API** pro `.env`.
-5. Em **Authentication → Providers**, habilitar o método de login que for usar (ex.:
-   email/senha) — não é usado pelo frontend V1 ainda, mas já deixa `profiles` funcional.
-6. Cadastrar um usuário de teste (via `supabase.auth.signUp` ou pelo painel) e promovê-lo
-   manualmente a admin: `update public.profiles set role = 'admin' where email = '...';`
-7. Testar a regra de empréstimo direto no SQL Editor:
-   ```sql
-   select public.register_loan('<book_id>', '<student_id>');
-   select public.return_loan('<loan_id>');
-   select * from public.overdue_loans;
-   select * from public.dashboard_stats;
-   ```
-8. Testar RLS: autenticado como o usuário de teste (via `supabase.auth` no frontend, ou
-   `SET request.jwt.claims` no SQL Editor), confirmar que `select * from students` só
-   funciona pra `admin`/`librarian`.
+Se o projeto, as migrations 001–011 e o seed já estavam prontos antes de 2026-08-12, só
+falta:
+
+1. Rodar as migrations **012** (`012_add_grade_code_renewals.sql`) e **013**
+   (`013_relax_rls_for_anon.sql`) no SQL Editor, nessa ordem.
+2. Criar `.env` na raiz do projeto (copiando `.env.example`) com `VITE_SUPABASE_URL` e
+   `VITE_SUPABASE_ANON_KEY` de **Project Settings → API** — sem isso o app lança um erro
+   claro no console (`src/lib/supabase.ts`) em vez de tentar rodar sem credenciais.
+
+### Sobre autenticação (por que existe a migration 013)
+
+As policies de RLS originais (011) exigiam usuário autenticado com role `admin`/`librarian`
+em `profiles`. Isso pressupõe login — mas o frontend não tem tela de login (spec.md, "v1 é
+single-user, sem login"), então toda chamada do app chega no Postgres como role `anon`, sem
+`auth.uid()`. Sem ajuste, o app carregaria listas **vazias** (RLS filtra silenciosamente no
+select) e falharia ao salvar com "Você não tem permissão para realizar esta ação".
+
+A migration 013 libera o role `anon` nas mesmas operações que a "equipe da biblioteca"
+tinha — mesmo nível de proteção que o MVP já tinha em produção sobre `localStorage` (zero
+controle de acesso; segurança = não divulgar a URL). RLS continua **ativo**, só as policies
+passam a aceitar `anon`. Quando o projeto ganhar login de verdade (roadmap V2), reverta 013
+(policies voltam a exigir só `authenticated` + `is_staff()`) e adicione a tela de login.
+
+### Testar direto no SQL Editor
+
+```sql
+select public.register_loan('<book_id>', '<student_id>');
+select public.return_loan('<loan_id>');
+select public.renew_loan('<loan_id>');
+select * from public.overdue_loans;
+select * from public.dashboard_stats;
+```

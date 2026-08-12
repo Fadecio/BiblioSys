@@ -47,4 +47,7 @@ export const loansService = {
 
   returnLoan: (loanId: string) =>
     run<Loan>('loansService.returnLoan', () => supabase.rpc('return_loan', { p_loan_id: loanId })),
+
+  renew: (loanId: string, extraDays?: number) =>
+    run<Loan>('loansService.renew', () => supabase.rpc('renew_loan', { p_loan_id: loanId, p_extra_days: extraDays })),
 }

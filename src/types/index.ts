@@ -28,3 +28,10 @@ export interface Emprestimo {
   status: StatusEmprestimo;
   renovacoes: number;
 }
+
+// retorno padrão das operações de escrita dos hooks (Supabase pode falhar por rede,
+// permissão ou regra de negócio — diferente do localStorage, que nunca falhava)
+export interface ResultadoAcao {
+  sucesso: boolean;
+  mensagem?: string;
+}

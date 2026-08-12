@@ -71,6 +71,7 @@ export interface Database {
           id: string
           title: string
           isbn: string | null
+          code: string | null
           description: string | null
           cover_url: string | null
           publisher: string | null
@@ -86,6 +87,7 @@ export interface Database {
           id?: string
           title: string
           isbn?: string | null
+          code?: string | null
           description?: string | null
           cover_url?: string | null
           publisher?: string | null
@@ -98,11 +100,13 @@ export interface Database {
         Update: {
           title?: string
           isbn?: string | null
+          code?: string | null
           description?: string | null
           cover_url?: string | null
           publisher?: string | null
           publication_year?: number | null
           total_copies?: number
+          available_copies?: number
           author_id?: string | null
           category_id?: string | null
         }
@@ -129,6 +133,7 @@ export interface Database {
           email: string | null
           phone: string | null
           class: string | null
+          grade: string | null
           birth_date: string | null
           active: boolean
           created_at: string
@@ -137,10 +142,13 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          registration_number: string
+          // gerado automaticamente pelo banco (default via sequence, ver migration 012) quando
+          // omitido — a tela de Alunos não coleta matrícula
+          registration_number?: string
           email?: string | null
           phone?: string | null
           class?: string | null
+          grade?: string | null
           birth_date?: string | null
           active?: boolean
         }
@@ -150,6 +158,7 @@ export interface Database {
           email?: string | null
           phone?: string | null
           class?: string | null
+          grade?: string | null
           birth_date?: string | null
           active?: boolean
         }
@@ -164,12 +173,13 @@ export interface Database {
           due_date: string
           return_date: string | null
           status: LoanStatus
+          renewals: number
           created_at: string
           updated_at: string
         }
         // o schema aceita insert/update diretos (refletindo o banco), mas o service layer
-        // (services/loans.service.ts) só expõe as RPCs register_loan/return_loan, que aplicam
-        // as regras de negócio — ver 008_create_functions.sql
+        // (services/loans.service.ts) só expõe as RPCs register_loan/return_loan/renew_loan,
+        // que aplicam as regras de negócio — ver 008_create_functions.sql e 012
         Insert: {
           id?: string
           book_id: string
@@ -178,6 +188,7 @@ export interface Database {
           due_date: string
           return_date?: string | null
           status?: LoanStatus
+          renewals?: number
         }
         Update: {
           return_date?: string | null
@@ -246,6 +257,10 @@ export interface Database {
       }
       return_loan: {
         Args: { p_loan_id: string }
+        Returns: Database['public']['Tables']['loans']['Row']
+      }
+      renew_loan: {
+        Args: { p_loan_id: string; p_extra_days?: number }
         Returns: Database['public']['Tables']['loans']['Row']
       }
     }

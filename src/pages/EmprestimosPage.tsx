@@ -50,8 +50,8 @@ export const EmprestimosPage = () => {
     })
   }, [emprestimos, filtro, busca, alunos, livros])
 
-  const handleRegistrar = (alunoId: string, livroId: string) => {
-    const resultado = registrar(alunoId, livroId)
+  const handleRegistrar = async (alunoId: string, livroId: string) => {
+    const resultado = await registrar(alunoId, livroId)
     if (resultado.sucesso) setDialogAberto(false)
     return resultado
   }

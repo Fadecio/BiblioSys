@@ -7,13 +7,15 @@ export type CategoryInput = Database['public']['Tables']['categories']['Insert']
 export type CategoryUpdate = Database['public']['Tables']['categories']['Update']
 
 export const categoriesService = {
-  list: () => run('categoriesService.list', () => supabase.from('categories').select('*').order('name')),
+  list: () => run<Category[]>('categoriesService.list', () => supabase.from('categories').select('*').order('name')),
 
   create: (input: CategoryInput) =>
-    run('categoriesService.create', () => supabase.from('categories').insert(input).select().single()),
+    run<Category>('categoriesService.create', () => supabase.from('categories').insert(input).select().single()),
 
   update: (id: string, input: CategoryUpdate) =>
-    run('categoriesService.update', () => supabase.from('categories').update(input).eq('id', id).select().single()),
+    run<Category>('categoriesService.update', () =>
+      supabase.from('categories').update(input).eq('id', id).select().single(),
+    ),
 
   remove: (id: string) =>
     run('categoriesService.remove', async () => {

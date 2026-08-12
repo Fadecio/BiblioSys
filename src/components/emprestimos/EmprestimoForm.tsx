@@ -5,12 +5,10 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { useAlunos } from "@/hooks/useAlunos";
 import { useLivros } from "@/hooks/useLivros";
+import type { ResultadoAcao } from "@/types";
 
 interface EmprestimoFormProps {
-  onRegistrar: (
-    alunoId: string,
-    livroId: string,
-  ) => { sucesso: boolean; mensagem?: string };
+  onRegistrar: (alunoId: string, livroId: string) => Promise<ResultadoAcao>;
   onCancelar: () => void;
 }
 
@@ -45,7 +43,7 @@ export const EmprestimoForm = ({
     [livros],
   );
 
-  const handleSubmit = (evento: SubmitEvent) => {
+  const handleSubmit = async (evento: SubmitEvent) => {
     evento.preventDefault();
 
     if (!alunoId || !livroId) {
@@ -53,7 +51,7 @@ export const EmprestimoForm = ({
       return;
     }
 
-    const resultado = onRegistrar(alunoId, livroId);
+    const resultado = await onRegistrar(alunoId, livroId);
     if (!resultado.sucesso) {
       setErro(resultado.mensagem ?? "Não foi possível registrar o empréstimo.");
     }

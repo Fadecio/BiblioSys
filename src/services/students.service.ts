@@ -13,7 +13,7 @@ export interface BuscarAlunosFiltro {
 
 export const studentsService = {
   list: (filtro: BuscarAlunosFiltro = {}) =>
-    run('studentsService.list', () => {
+    run<Student[]>('studentsService.list', () => {
       let query = supabase.from('students').select('*').order('name')
 
       if (filtro.termo) query = query.or(`name.ilike.%${filtro.termo}%,registration_number.ilike.%${filtro.termo}%`)
@@ -23,10 +23,10 @@ export const studentsService = {
     }),
 
   create: (input: StudentInput) =>
-    run('studentsService.create', () => supabase.from('students').insert(input).select().single()),
+    run<Student>('studentsService.create', () => supabase.from('students').insert(input).select().single()),
 
   update: (id: string, input: StudentUpdate) =>
-    run('studentsService.update', () => supabase.from('students').update(input).eq('id', id).select().single()),
+    run<Student>('studentsService.update', () => supabase.from('students').update(input).eq('id', id).select().single()),
 
   remove: (id: string) =>
     run('studentsService.remove', async () => {

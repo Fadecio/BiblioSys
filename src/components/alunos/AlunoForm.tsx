@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
-import type { Aluno } from "@/types";
+import type { Aluno, ResultadoAcao } from "@/types";
 import type { DadosAluno } from "@/hooks/useAlunos";
 
 interface AlunoFormProps {
   valorInicial?: Aluno;
-  onSalvar: (dados: DadosAluno) => void;
+  onSalvar: (dados: DadosAluno) => Promise<ResultadoAcao>;
   onCancelar: () => void;
 }
 
@@ -22,7 +22,7 @@ export const AlunoForm = ({
   const [serie, setSerie] = useState(valorInicial?.serie ?? "");
   const [erro, setErro] = useState("");
 
-  const handleSubmit = (evento: SubmitEvent) => {
+  const handleSubmit = async (evento: SubmitEvent) => {
     evento.preventDefault();
 
     if (!nome.trim() || !turma.trim() || !serie.trim()) {
@@ -30,11 +30,12 @@ export const AlunoForm = ({
       return;
     }
 
-    onSalvar({
+    const resultado = await onSalvar({
       nome: nome.trim(),
       turma: turma.trim(),
       serie: serie.trim(),
     });
+    if (!resultado.sucesso) setErro(resultado.mensagem ?? "Não foi possível salvar o aluno.");
   };
 
   return (

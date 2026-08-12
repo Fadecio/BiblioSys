@@ -10,10 +10,11 @@ import { normalizarTexto } from '@/utils/texto'
 import type { Aluno } from '@/types'
 
 export const AlunosPage = () => {
-  const { alunos, adicionar, atualizar, remover } = useAlunos()
+  const { alunos, erro, adicionar, atualizar, remover } = useAlunos()
   const [busca, setBusca] = useState('')
   const [dialogAberto, setDialogAberto] = useState(false)
   const [alunoEmEdicao, setAlunoEmEdicao] = useState<Aluno | undefined>(undefined)
+  const [erroExclusao, setErroExclusao] = useState('')
 
   const alunosFiltrados = useMemo(() => {
     const termo = normalizarTexto(busca.trim())
@@ -38,13 +39,15 @@ export const AlunosPage = () => {
     setDialogAberto(true)
   }
 
-  const handleSalvar = (dados: DadosAluno) => {
-    if (alunoEmEdicao) {
-      atualizar(alunoEmEdicao.id, dados)
-    } else {
-      adicionar(dados)
-    }
-    setDialogAberto(false)
+  const handleSalvar = async (dados: DadosAluno) => {
+    const resultado = alunoEmEdicao ? await atualizar(alunoEmEdicao.id, dados) : await adicionar(dados)
+    if (resultado.sucesso) setDialogAberto(false)
+    return resultado
+  }
+
+  const handleExcluir = async (id: string) => {
+    const resultado = await remover(id)
+    setErroExclusao(resultado.sucesso ? '' : (resultado.mensagem ?? ''))
   }
 
   return (
@@ -67,8 +70,10 @@ export const AlunosPage = () => {
         className="max-w-sm"
       />
 
+      {(erro || erroExclusao) && <p className="text-sm text-destructive">{erro ?? erroExclusao}</p>}
+
       <div className="overflow-x-auto rounded-lg border border-border bg-white">
-        <AlunoTable alunos={alunosFiltrados} onEditar={abrirEdicao} onExcluir={remover} />
+        <AlunoTable alunos={alunosFiltrados} onEditar={abrirEdicao} onExcluir={handleExcluir} />
       </div>
 
       <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
