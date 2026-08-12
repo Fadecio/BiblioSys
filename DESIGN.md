@@ -110,6 +110,54 @@ Radix), sem introduzir nenhuma lib nova:
 
 ## Histórico de alterações
 
+### 2026-08-12 — Schema Supabase completo (banco novo, ainda não ligado ao frontend)
+- **Pedido:** `BD.md` (documento do usuário, commit anterior) pedia um banco Supabase
+  completo pro sistema — tabelas normalizadas, regras de empréstimo/devolução no banco,
+  RLS, views de dashboard, migrations versionadas, seed, camada de serviço TypeScript e
+  documentação.
+- **Escopo do que foi feito:** só o backend (banco + camada de acesso aditiva) — os hooks
+  atuais (`useAlunos`/`useLivros`/`useEmprestimos`) **continuam intactos sobre
+  `localStorage`**, nada no frontend existente foi alterado. Justificativa: não existe
+  projeto Supabase real provisionado (sem CLI linkado, sem credenciais) pra testar contra;
+  trocar a fonte de dados sem poder validar quebraria a promessa de "não remover
+  funcionalidade existente". `spec.md` §9 já coloca essa migração como V2 — este trabalho
+  entrega a base pronta pra quando isso acontecer, documentada em
+  `docs/database.md#integração-com-o-frontend-v2`.
+- **11 migrations** em `supabase/migrations/001..011` (`profiles`, `authors`, `categories`,
+  `books`, `students`, `loans`, índices incl. `pg_trgm` pra busca por título/nome,
+  functions, triggers, views, RLS policies) + `supabase/seed.sql` (10 autores, 8
+  categorias, 20 livros, 15 alunos, empréstimos ativos/atrasados/devolvidos, idempotente
+  via UUIDs fixos).
+- **Decisão de modelagem:** schema normaliza `authors`/`categories` como tabelas próprias
+  (FK em `books`), diferente do MVP atual onde `Livro.autor`/`Livro.categoria` são texto
+  livre — pedido explícito do `BD.md`, não é invenção de entidade.
+- **Regra de negócio em dois níveis:** funções `register_loan`/`return_loan` (chamadas
+  pelo service layer via RPC) *e* triggers equivalentes na tabela `loans`, pra garantir a
+  regra mesmo se alguém escrever direto na tabela fora da função — decisão deliberada de
+  "defesa em profundidade" no banco, não redundância acidental.
+- **"Atrasado" é sempre calculado**, nunca lido de `loans.status` como fonte de verdade —
+  mesma filosofia que `derivarStatus()` já usa no frontend. View `overdue_loans` recalcula
+  a partir de `return_date`/`due_date`; `sync_overdue_loans()` existe só como conveniência
+  opcional (não roda por trigger).
+- **RLS sem `USING (true)` em nenhuma policy:** catálogo (`authors`/`categories`/`books`)
+  legível por qualquer autenticado; `students`/`loans` (dado pessoal/sensível) restritos a
+  `admin`/`librarian`; papel `student` fica sem policy nas tabelas operacionais porque não
+  existe hoje vínculo aluno↔usuário autenticado (não é esquecimento, é decisão registrada
+  em `docs/database.md`).
+- **Camada de serviço TS** (`src/lib/supabase.ts`, `src/services/*.service.ts`,
+  `src/types/database.types.ts`) criada do zero, tipada sem `any` — o `Database` type foi
+  escrito à mão (sem projeto Supabase real pra rodar `supabase gen types`) e precisou de
+  `Relationships: []`/FKs explícitas por tabela pra satisfazer o `GenericSchema` do
+  `postgrest-js` v2.112; métodos de `update()` usam o tipo `Update` do schema (não
+  `Partial<Insert>`) porque o PostgREST rejeita propriedades excedentes (`id`) mesmo que
+  `undefined`.
+- **Verificação:** `npx tsc -b`, `npm run build` e `npm run lint` limpos (os 3 erros de
+  lint pré-existentes em `badge.tsx`/`button.tsx`/`tabs.tsx`, arquivos gerados pelo shadcn,
+  continuam os mesmos de antes — não foram introduzidos por este trabalho). Não foi
+  possível testar contra um banco real (sem projeto Supabase provisionado); os próximos
+  passos manuais no painel do Supabase estão documentados em
+  `docs/database.md#próximos-passos-no-painel-do-supabase`.
+
 ### 2026-08-11 — Busca por nome nos campos de aluno/livro do empréstimo
 - **Pedido:** no cadastro de empréstimo, tanto o campo de aluno quanto o de
   livro precisavam permitir digitar o nome pra encontrar mais fácil na
