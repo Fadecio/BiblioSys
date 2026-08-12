@@ -1,42 +1,35 @@
 import './index.css'
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, type Root } from 'react-dom/client'
 
-const rootElement = document.getElementById('root')!
-const root = createRoot(rootElement)
-
-function renderStartupError(error: unknown) {
+function renderStartupError(root: Root, error: unknown) {
   const message = error instanceof Error ? error.message : String(error)
+  const isConfigError = message.includes('Supabase não configurado')
+
   root.render(
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem',
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <div style={{ maxWidth: 560 }}>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-          Não foi possível iniciar o BiblioSys
-        </h1>
-        <p style={{ marginBottom: '0.75rem', color: '#dc2626', fontFamily: 'monospace' }}>
-          {message}
-        </p>
-        <p style={{ color: '#525252' }}>
-          Verifique se o arquivo <code>.env</code> existe na raiz do projeto com{' '}
-          <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> preenchidos
-          (veja <code>.env.example</code> e <code>docs/database.md</code>), depois reinicie o
-          servidor de desenvolvimento.
-        </p>
+    <div className="flex min-h-screen items-center justify-center bg-background p-8 text-foreground">
+      <div className="max-w-lg">
+        <h1 className="mb-3 text-lg font-semibold">Não foi possível iniciar o BiblioSys</h1>
+        <p className="mb-3 font-mono text-sm text-destructive">{message}</p>
+        {isConfigError ? (
+          <p className="text-muted-foreground">
+            Verifique se o arquivo <code>.env</code> existe na raiz do projeto com{' '}
+            <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> preenchidos
+            (veja <code>.env.example</code> e <code>docs/database.md</code>), depois reinicie o
+            servidor de desenvolvimento.
+          </p>
+        ) : (
+          <p className="text-muted-foreground">
+            Verifique sua conexão com a internet e recarregue a página. Se o problema
+            persistir, veja o console do navegador para mais detalhes.
+          </p>
+        )}
       </div>
     </div>,
   )
 }
 
-async function bootstrap() {
+async function bootstrap(root: Root) {
   const [{ BrowserRouter }, { AlunosProvider }, { LivrosProvider }, { EmprestimosProvider }, { default: App }] =
     await Promise.all([
       import('react-router-dom'),
@@ -61,4 +54,15 @@ async function bootstrap() {
   )
 }
 
-bootstrap().catch(renderStartupError)
+function main() {
+  const rootElement = document.getElementById('root')
+  if (!rootElement) {
+    document.body.textContent = 'Erro: elemento #root não encontrado em index.html.'
+    return
+  }
+
+  const root = createRoot(rootElement)
+  bootstrap(root).catch((error) => renderStartupError(root, error))
+}
+
+main()
