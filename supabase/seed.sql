@@ -92,4 +92,8 @@ set available_copies = b.total_copies - coalesce((
 ), 0)
 where b.id in (select distinct book_id from public.loans);
 
-select public.sync_overdue_loans();
+-- sincronizar empréstimos atrasados
+do $$
+begin
+  perform public.sync_overdue_loans();
+end $$;
