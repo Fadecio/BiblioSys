@@ -1,11 +1,17 @@
-import { Outlet } from 'react-router-dom'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { MobileNav } from '@/components/layout/MobileNav'
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { MobileNav } from "@/components/layout/MobileNav";
 
 export const AppLayout = () => {
+  const [sidebarRecolhida, setSidebarRecolhida] = useState(false);
+
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 md:flex-row">
-      <Sidebar />
+      <Sidebar
+        isCollapsed={sidebarRecolhida}
+        onToggle={() => setSidebarRecolhida(!sidebarRecolhida)}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileNav />
         <main className="flex-1 overflow-x-auto p-4 sm:p-6 md:p-8">
@@ -13,5 +19,5 @@ export const AppLayout = () => {
         </main>
       </div>
     </div>
-  )
-}
+  );
+};

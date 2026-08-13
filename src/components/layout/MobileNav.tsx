@@ -15,8 +15,12 @@ export const MobileNav = () => {
             <Menu className="size-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 gap-0 p-0">
+        <SheetContent side="left" className="w-72 gap-0 p-0 flex flex-col">
           <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
+          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+            <Library className="size-5 text-primary" />
+            <span className="text-sm font-semibold text-foreground">BiblioSys</span>
+          </div>
           <SidebarConteudo aoNavegar={() => setAberto(false)} />
         </SheetContent>
       </Sheet>

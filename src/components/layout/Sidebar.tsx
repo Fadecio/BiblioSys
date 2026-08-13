@@ -6,6 +6,8 @@ import {
   ArrowLeftRight,
   Library,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,10 +23,14 @@ const ITENS_NAVEGACAO = [
 
 interface SidebarConteudoProps {
   aoNavegar?: () => void;
+  isCollapsed?: boolean;
 }
 
 // conteúdo compartilhado entre a sidebar fixa (desktop) e a gaveta (mobile)
-export const SidebarConteudo = ({ aoNavegar }: SidebarConteudoProps) => {
+export const SidebarConteudo = ({
+  aoNavegar,
+  isCollapsed = false,
+}: SidebarConteudoProps) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
@@ -36,10 +42,6 @@ export const SidebarConteudo = ({ aoNavegar }: SidebarConteudoProps) => {
 
   return (
     <>
-      <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <Library className="size-5 text-primary" />
-        <span className="text-sm font-semibold text-foreground">BiblioSys</span>
-      </div>
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {ITENS_NAVEGACAO.map(({ rota, rotulo, icone: Icone }) => (
           <NavLink
@@ -53,34 +55,75 @@ export const SidebarConteudo = ({ aoNavegar }: SidebarConteudoProps) => {
                   "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
               )
             }
+            title={isCollapsed ? rotulo : undefined}
           >
-            <Icone className="size-4" />
-            {rotulo}
+            <Icone className="size-4 shrink-0" />
+            {!isCollapsed && <span>{rotulo}</span>}
           </NavLink>
         ))}
       </nav>
       <div className="border-t border-border p-3">
-        <div className="mb-3 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-          {user?.email}
-        </div>
+        {!isCollapsed && (
+          <div
+            className="mb-3 rounded-lg bg-muted p-3 text-sm text-muted-foreground truncate"
+            title={user?.email}
+          >
+            {user?.email}
+          </div>
+        )}
         <Button
           onClick={handleLogout}
           variant="outline"
           size="sm"
-          className="w-full justify-start gap-2"
+          className={cn(
+            "justify-start gap-2",
+            isCollapsed ? "w-full p-2" : "w-full",
+          )}
+          title={isCollapsed ? "Sair" : undefined}
         >
-          <LogOut className="size-4" />
-          Sair
+          <LogOut className="size-4 shrink-0" />
+          {!isCollapsed && <span>Sair</span>}
         </Button>
       </div>
     </>
   );
 };
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isCollapsed?: boolean;
+  onToggle?: () => void;
+}
+
+export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
   return (
-    <aside className="hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-white md:flex">
-      <SidebarConteudo />
+    <aside
+      className={`hidden h-screen shrink-0 flex-col border-r border-border bg-white transition-all duration-300 md:flex ${
+        isCollapsed ? "w-20" : "w-60"
+      }`}
+    >
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        {!isCollapsed && (
+          <div className="flex items-center gap-2">
+            <Library className="size-5 text-primary" />
+            <span className="text-sm font-semibold text-foreground">
+              BiblioSys
+            </span>
+          </div>
+        )}
+        {isCollapsed && <Library className="size-5 text-primary" />}
+        <button
+          onClick={onToggle}
+          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          aria-label={isCollapsed ? "Expandir" : "Recolher"}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="size-4" />
+          ) : (
+            <ChevronLeft className="size-4" />
+          )}
+        </button>
+      </div>
+      <SidebarConteudo isCollapsed={isCollapsed} />
     </aside>
   );
 };
