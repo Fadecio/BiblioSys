@@ -263,6 +263,10 @@ export interface Database {
         Args: { p_loan_id: string; p_extra_days?: number }
         Returns: Database['public']['Tables']['loans']['Row']
       }
+      update_loan_date: {
+        Args: { p_loan_id: string; p_loan_date: string; p_loan_days?: number }
+        Returns: Database['public']['Tables']['loans']['Row']
+      }
     }
   }
 }
