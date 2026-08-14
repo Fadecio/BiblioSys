@@ -73,12 +73,13 @@ export const EmprestimoTable = ({ emprestimos }: EmprestimoTableProps) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Aluno</TableHead>
-            <TableHead>Livro</TableHead>
-            <TableHead>Devolução prevista</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Renovações</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="text-left">Aluno</TableHead>
+            <TableHead className="text-left">Livro</TableHead>
+            <TableHead className="text-center">Data do empréstimo</TableHead>
+            <TableHead className="text-center">Devolução prevista</TableHead>
+            <TableHead className="text-center">Status</TableHead>
+            <TableHead className="text-center">Renovações</TableHead>
+            <TableHead className="text-center">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -90,14 +91,15 @@ export const EmprestimoTable = ({ emprestimos }: EmprestimoTableProps) => {
 
             return (
               <TableRow key={emprestimo.id}>
-                <TableCell className="font-medium text-foreground">{aluno?.nome ?? 'Aluno removido'}</TableCell>
-                <TableCell>{livro?.titulo ?? 'Livro removido'}</TableCell>
-                <TableCell>{formatarData(emprestimo.dataPrevistaDevolucao)}</TableCell>
-                <TableCell>
+                <TableCell className="text-left font-medium text-foreground">{aluno?.nome ?? 'Aluno removido'}</TableCell>
+                <TableCell className="text-left">{livro?.titulo ?? 'Livro removido'}</TableCell>
+                <TableCell className="text-center">{formatarData(emprestimo.dataEmprestimo)}</TableCell>
+                <TableCell className="text-center">{formatarData(emprestimo.dataPrevistaDevolucao)}</TableCell>
+                <TableCell className="text-center">
                   <StatusBadge status={status} />
                 </TableCell>
-                <TableCell>{emprestimo.renovacoes}</TableCell>
-                <TableCell className="flex justify-end gap-1">
+                <TableCell className="text-center">{emprestimo.renovacoes}</TableCell>
+                <TableCell className="flex justify-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon-sm"
