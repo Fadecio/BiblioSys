@@ -27,9 +27,15 @@ export const AlunosPage = () => {
         )
       : alunos
     return [...filtrados].sort((a, b) => {
-      const porSerie = a.serie.localeCompare(b.serie, 'pt-BR', { numeric: true, sensitivity: 'base' })
+      // comparado pela forma normalizada (ver AlunoTable) — evita que "4° ano" e "4º ANO"
+      // (mesma turma, símbolo/caixa diferentes) ordenem de um jeito que quebre o agrupamento
+      const porSerie = normalizarTexto(a.serie).localeCompare(normalizarTexto(b.serie), 'pt-BR', {
+        numeric: true,
+      })
       if (porSerie !== 0) return porSerie
-      const porTurma = a.turma.localeCompare(b.turma, 'pt-BR', { numeric: true, sensitivity: 'base' })
+      const porTurma = normalizarTexto(a.turma).localeCompare(normalizarTexto(b.turma), 'pt-BR', {
+        numeric: true,
+      })
       if (porTurma !== 0) return porTurma
       return a.nome.localeCompare(b.nome, 'pt-BR')
     })

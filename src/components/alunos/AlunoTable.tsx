@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import { normalizarTexto } from "@/utils/texto";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -42,11 +43,18 @@ export const AlunoTable = ({
   }
 
   // alunos já vêm ordenados por série > turma > nome (AlunosPage) — só precisamos
-  // detectar onde o grupo muda pra inserir o cabeçalho de seção.
+  // detectar onde o grupo muda pra inserir o cabeçalho de seção. Comparado pela forma
+  // normalizada (sem símbolo/caixa) porque campos livres deixam "4° ano" e "4º ANO"
+  // como a mesma turma na prática, mas strings diferentes.
   const grupos: { serie: string; turma: string; alunos: Aluno[] }[] = [];
   for (const aluno of alunos) {
     const grupoAtual = grupos[grupos.length - 1];
-    if (grupoAtual && grupoAtual.serie === aluno.serie && grupoAtual.turma === aluno.turma) {
+    const mesmoGrupo =
+      grupoAtual &&
+      normalizarTexto(grupoAtual.serie) === normalizarTexto(aluno.serie) &&
+      normalizarTexto(grupoAtual.turma) === normalizarTexto(aluno.turma);
+
+    if (mesmoGrupo) {
       grupoAtual.alunos.push(aluno);
     } else {
       grupos.push({ serie: aluno.serie, turma: aluno.turma, alunos: [aluno] });
