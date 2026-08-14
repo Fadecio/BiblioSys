@@ -24,6 +24,7 @@ const paraAluno = (student: Student): Aluno => ({
   nome: student.name,
   turma: student.class ?? '',
   serie: student.grade ?? '',
+  telefone: student.phone ?? undefined,
   criadoEm: student.created_at,
 })
 
@@ -54,7 +55,12 @@ export const AlunosProvider = ({ children }: { children: ReactNode }) => {
 
   const adicionar = async (dados: DadosAluno): Promise<ResultadoAcao> => {
     try {
-      const criado = await studentsService.create({ name: dados.nome, class: dados.turma, grade: dados.serie })
+      const criado = await studentsService.create({
+        name: dados.nome,
+        class: dados.turma,
+        grade: dados.serie,
+        phone: dados.telefone?.trim() || null,
+      })
       setAlunos((atual) => [...atual, paraAluno(criado)])
       return { sucesso: true }
     } catch (e) {
@@ -64,7 +70,12 @@ export const AlunosProvider = ({ children }: { children: ReactNode }) => {
 
   const atualizar = async (id: string, dados: DadosAluno): Promise<ResultadoAcao> => {
     try {
-      const atualizado = await studentsService.update(id, { name: dados.nome, class: dados.turma, grade: dados.serie })
+      const atualizado = await studentsService.update(id, {
+        name: dados.nome,
+        class: dados.turma,
+        grade: dados.serie,
+        phone: dados.telefone?.trim() || null,
+      })
       setAlunos((atual) => atual.map((aluno) => (aluno.id === id ? paraAluno(atualizado) : aluno)))
       return { sucesso: true }
     } catch (e) {

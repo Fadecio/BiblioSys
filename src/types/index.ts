@@ -3,6 +3,7 @@ export interface Aluno {
   nome: string;
   turma: string;
   serie: string;
+  telefone?: string;
   criadoEm: string;
 }
 

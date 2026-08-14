@@ -20,6 +20,7 @@ export const AlunoForm = ({
   const [nome, setNome] = useState(valorInicial?.nome ?? "");
   const [turma, setTurma] = useState(valorInicial?.turma ?? "");
   const [serie, setSerie] = useState(valorInicial?.serie ?? "");
+  const [telefone, setTelefone] = useState(valorInicial?.telefone ?? "");
   const [erro, setErro] = useState("");
 
   const handleSubmit = async (evento: SubmitEvent) => {
@@ -34,6 +35,7 @@ export const AlunoForm = ({
       nome: nome.trim(),
       turma: turma.trim(),
       serie: serie.trim(),
+      telefone: telefone.trim() || undefined,
     });
     if (!resultado.sucesso) setErro(resultado.mensagem ?? "Não foi possível salvar o aluno.");
   };
@@ -47,6 +49,16 @@ export const AlunoForm = ({
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           autoFocus
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="telefone">Telefone</Label>
+        <Input
+          id="telefone"
+          type="tel"
+          value={telefone}
+          onChange={(e) => setTelefone(e.target.value)}
+          placeholder="(00) 00000-0000"
         />
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

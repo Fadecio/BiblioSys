@@ -45,6 +45,7 @@ export const AlunoTable = ({
       <TableHeader>
         <TableRow>
           <TableHead className="max-w-60">Nome</TableHead>
+          <TableHead className="text-center">Telefone</TableHead>
           <TableHead className="text-center">Série</TableHead>
           <TableHead className="text-center">Turma</TableHead>
           <TableHead className="text-right">Ações</TableHead>
@@ -59,6 +60,9 @@ export const AlunoTable = ({
                 title={aluno.nome}
               >
                 {aluno.nome}
+              </TableCell>
+              <TableCell className="text-center text-muted-foreground">
+                {aluno.telefone ?? "—"}
               </TableCell>
               <TableCell className="text-center">{aluno.serie}</TableCell>
               <TableCell className="text-center">{aluno.turma}</TableCell>
