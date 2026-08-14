@@ -26,7 +26,13 @@ export const AlunosPage = () => {
             normalizarTexto(aluno.serie).includes(termo),
         )
       : alunos
-    return [...filtrados].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    return [...filtrados].sort((a, b) => {
+      const porSerie = a.serie.localeCompare(b.serie, 'pt-BR', { numeric: true, sensitivity: 'base' })
+      if (porSerie !== 0) return porSerie
+      const porTurma = a.turma.localeCompare(b.turma, 'pt-BR', { numeric: true, sensitivity: 'base' })
+      if (porTurma !== 0) return porTurma
+      return a.nome.localeCompare(b.nome, 'pt-BR')
+    })
   }, [alunos, busca])
 
   const abrirNovo = () => {
