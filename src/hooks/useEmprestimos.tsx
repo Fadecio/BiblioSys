@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { loansService, type LoanWithRelations } from '@/services/loans.service'
 import { ServiceError } from '@/services/errors'
 import type { Emprestimo, ResultadoAcao } from '@/types'
-import { derivarStatus } from '@/utils/emprestimo'
+import { derivarStatus, PRAZO_PADRAO_DIAS } from '@/utils/emprestimo'
 import { useLivros } from '@/hooks/useLivros'
 
 interface EmprestimosContextValor {
@@ -12,6 +12,7 @@ interface EmprestimosContextValor {
   registrar: (alunoId: string, livroId: string) => Promise<ResultadoAcao>
   devolver: (id: string) => Promise<ResultadoAcao>
   renovar: (id: string) => Promise<ResultadoAcao>
+  editarData: (id: string, dataEmprestimo: string) => Promise<ResultadoAcao>
 }
 
 const EmprestimosContext = createContext<EmprestimosContextValor | null>(null)
@@ -112,8 +113,23 @@ export const EmprestimosProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  // corrige a data do empréstimo — devolução prevista é sempre recalculada a partir dela
+  // (mesma regra de PRAZO_PADRAO_DIAS usada em registrar), nunca ajustada manualmente à parte
+  const editarData = async (id: string, dataEmprestimo: string): Promise<ResultadoAcao> => {
+    try {
+      await loansService.updateLoanDate(id, dataEmprestimo, PRAZO_PADRAO_DIAS)
+      await carregar()
+      return { sucesso: true }
+    } catch (e) {
+      return {
+        sucesso: false,
+        mensagem: e instanceof ServiceError ? e.message : 'Erro inesperado ao editar a data do empréstimo.',
+      }
+    }
+  }
+
   return (
-    <EmprestimosContext.Provider value={{ emprestimos, carregando, erro, registrar, devolver, renovar }}>
+    <EmprestimosContext.Provider value={{ emprestimos, carregando, erro, registrar, devolver, renovar, editarData }}>
       {children}
     </EmprestimosContext.Provider>
   )
