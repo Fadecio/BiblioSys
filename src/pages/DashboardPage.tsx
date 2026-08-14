@@ -45,23 +45,11 @@ export const DashboardPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <div className="flex flex-col items-center">
-          <h2 className="text-xl font-semibold text-foreground">Dashboard</h2>
-          <p className="text-sm text-muted-foreground">
-            Visão geral da biblioteca.
-          </p>
-        </div>
-
-        <div className="w-full max-w-2xl">
-          <h1 className="text-2xl font-bold leading-tight text-foreground md:text-3xl">
-            <span className="hidden md:inline">
-              ESCOLA RAIMUNDO MARQUES DE ALMEIDA
-            </span>
-            <span className="block md:hidden">ESCOLA RAIMUNDO</span>
-            <span className="block md:hidden">MARQUES DE ALMEIDA</span>
-          </h1>
-        </div>
+      <div>
+        <h1 className="text-xl font-semibold text-foreground">Visão geral</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Escola Raimundo Marques de Almeida
+        </p>
       </div>
 
       <CardsResumo cards={cards} />

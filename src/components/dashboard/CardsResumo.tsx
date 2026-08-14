@@ -1,6 +1,5 @@
 import type { ComponentType } from 'react'
 import { Users, BookOpen, ArrowLeftRight, Clock, AlertTriangle } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 interface CardResumoConfig {
@@ -17,21 +16,22 @@ const DESTAQUES: Record<'amber' | 'red', string> = {
 
 export const CardsResumo = ({ cards }: { cards: CardResumoConfig[] }) => {
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {cards.map(({ titulo, valor, icone: Icone, destaque }) => (
-        <Card key={titulo}>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-sm font-normal text-muted-foreground">
+        <div
+          key={titulo}
+          className="rounded-lg border border-border bg-card px-4 py-3"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {titulo}
-              <Icone className={cn('size-4', destaque ? DESTAQUES[destaque] : 'text-muted-foreground')} />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className={cn('text-2xl font-semibold', destaque ? DESTAQUES[destaque] : 'text-foreground')}>
-              {valor}
             </span>
-          </CardContent>
-        </Card>
+            <Icone className={cn('size-3.5', destaque ? DESTAQUES[destaque] : 'text-muted-foreground/60')} />
+          </div>
+          <span className={cn('mt-1.5 block text-2xl font-semibold tabular-nums', destaque ? DESTAQUES[destaque] : 'text-foreground')}>
+            {valor}
+          </span>
+        </div>
       ))}
     </div>
   )
