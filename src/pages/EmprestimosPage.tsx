@@ -12,13 +12,14 @@ import { useEmprestimos } from '@/hooks/useEmprestimos'
 import { statusExibicao } from '@/utils/emprestimo'
 import { normalizarTexto } from '@/utils/texto'
 
-type Filtro = 'todos' | 'ativos' | 'atrasados' | 'a-vencer'
+type Filtro = 'todos' | 'ativos' | 'atrasados' | 'a-vencer' | 'devolvidos'
 
 const ABAS: { valor: Filtro; rotulo: string }[] = [
   { valor: 'todos', rotulo: 'Todos' },
   { valor: 'ativos', rotulo: 'Ativos' },
   { valor: 'a-vencer', rotulo: 'A vencer' },
   { valor: 'atrasados', rotulo: 'Atrasados' },
+  { valor: 'devolvidos', rotulo: 'Devolvidos' },
 ]
 
 export const EmprestimosPage = () => {
@@ -34,6 +35,7 @@ export const EmprestimosPage = () => {
       if (filtro === 'todos') return emprestimos
       if (filtro === 'atrasados') return emprestimos.filter((e) => statusExibicao(e) === 'atrasado')
       if (filtro === 'a-vencer') return emprestimos.filter((e) => statusExibicao(e) === 'a-vencer')
+      if (filtro === 'devolvidos') return emprestimos.filter((e) => statusExibicao(e) === 'devolvido')
       return emprestimos.filter((e) => e.status === 'ativo')
     })()
 

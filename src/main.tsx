@@ -40,6 +40,7 @@ async function bootstrap(root: Root) {
     { LivrosProvider },
     { EmprestimosProvider },
     { default: App },
+    { TooltipProvider },
   ] = await Promise.all([
     import("react-router-dom"),
     import("@/contexts/AuthContext"),
@@ -47,20 +48,23 @@ async function bootstrap(root: Root) {
     import("@/contexts/LivrosContext"),
     import("@/contexts/EmprestimosContext"),
     import("./App.tsx"),
+    import("@/components/ui/tooltip"),
   ]);
 
   root.render(
     <StrictMode>
       <BrowserRouter>
-        <AuthProvider>
-          <AlunosProvider>
-            <LivrosProvider>
-              <EmprestimosProvider>
-                <App />
-              </EmprestimosProvider>
-            </LivrosProvider>
-          </AlunosProvider>
-        </AuthProvider>
+        <TooltipProvider>
+          <AuthProvider>
+            <AlunosProvider>
+              <LivrosProvider>
+                <EmprestimosProvider>
+                  <App />
+                </EmprestimosProvider>
+              </LivrosProvider>
+            </AlunosProvider>
+          </AuthProvider>
+        </TooltipProvider>
       </BrowserRouter>
     </StrictMode>,
   );
