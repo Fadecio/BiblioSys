@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,11 +23,17 @@ const ABAS: { valor: Filtro; rotulo: string }[] = [
   { valor: 'devolvidos', rotulo: 'Devolvidos' },
 ]
 
+const FILTROS_VALIDOS = ABAS.map((aba) => aba.valor)
+
 export const EmprestimosPage = () => {
   const { emprestimos, registrar } = useEmprestimos()
   const { alunos } = useAlunos()
   const { livros } = useLivros()
-  const [filtro, setFiltro] = useState<Filtro>('todos')
+  const [searchParams] = useSearchParams()
+  const filtroInicial = searchParams.get('filtro')
+  const [filtro, setFiltro] = useState<Filtro>(
+    FILTROS_VALIDOS.includes(filtroInicial as Filtro) ? (filtroInicial as Filtro) : 'todos',
+  )
   const [busca, setBusca] = useState('')
   const [dialogAberto, setDialogAberto] = useState(false)
 
