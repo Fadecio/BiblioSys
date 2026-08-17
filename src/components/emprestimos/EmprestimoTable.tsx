@@ -1,5 +1,5 @@
 import { useState, type SubmitEvent } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarClock, RotateCw, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,8 +36,11 @@ import {
 } from "@/utils/emprestimo";
 import type { Emprestimo } from "@/types";
 
+// data vem como "yyyy-MM-dd" (coluna `date` do Postgres, sem hora/fuso) — parseISO trata
+// como meia-noite local; new Date() trataria como UTC e "voltava" um dia em fusos como o do
+// Brasil (UTC-3) ao formatar na hora local.
 const formatarData = (data: string) =>
-  format(new Date(data), "dd/MM/yyyy", { locale: ptBR });
+  format(parseISO(data), "dd/MM/yyyy", { locale: ptBR });
 
 interface EmprestimoTableProps {
   emprestimos: Emprestimo[];

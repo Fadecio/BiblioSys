@@ -1,19 +1,23 @@
-import { addDays, differenceInCalendarDays, isAfter, startOfDay } from 'date-fns'
+import { addDays, differenceInCalendarDays, format, isAfter, parseISO, startOfDay } from 'date-fns'
 import type { Emprestimo, Livro, StatusEmprestimo } from '@/types'
 
 export const PRAZO_PADRAO_DIAS = 7
 
 export type StatusExibicao = 'em-dia' | 'a-vencer' | 'atrasado' | 'devolvido'
 
+// loan_date/due_date/return_date são colunas `date` do Postgres ("2026-08-17", sem hora/fuso).
+// new Date(...) interpreta esse formato como meia-noite UTC, o que em fusos atrás de UTC
+// (ex.: Brasil, UTC-3) "voltava" um dia ao formatar/comparar na hora local. parseISO trata a
+// mesma string como meia-noite local, então a data calendário fica sempre correta.
 export const calcularDataPrevista = (dataEmprestimo: string) =>
-  addDays(new Date(dataEmprestimo), PRAZO_PADRAO_DIAS).toISOString()
+  format(addDays(parseISO(dataEmprestimo), PRAZO_PADRAO_DIAS), 'yyyy-MM-dd')
 
 // status é sempre derivado da data atual, nunca lido como fonte de verdade (spec §6)
 export const derivarStatus = (emprestimo: Emprestimo): StatusEmprestimo => {
   if (emprestimo.dataDevolucao) return 'devolvido'
 
   const hoje = startOfDay(new Date())
-  const prevista = startOfDay(new Date(emprestimo.dataPrevistaDevolucao))
+  const prevista = startOfDay(parseISO(emprestimo.dataPrevistaDevolucao))
 
   if (isAfter(hoje, prevista)) return 'atrasado'
   return 'ativo'
@@ -25,7 +29,7 @@ export const statusExibicao = (emprestimo: Emprestimo): StatusExibicao => {
   if (status !== 'ativo') return status
 
   const hoje = startOfDay(new Date())
-  const prevista = startOfDay(new Date(emprestimo.dataPrevistaDevolucao))
+  const prevista = startOfDay(parseISO(emprestimo.dataPrevistaDevolucao))
   const diasRestantes = differenceInCalendarDays(prevista, hoje)
 
   return diasRestantes <= 2 ? 'a-vencer' : 'em-dia'
@@ -35,10 +39,10 @@ export const podeRenovar = (emprestimo: Emprestimo) => derivarStatus(emprestimo)
 
 export const renovarEmprestimo = (emprestimo: Emprestimo): Emprestimo => ({
   ...emprestimo,
-  dataPrevistaDevolucao: addDays(
-    new Date(emprestimo.dataPrevistaDevolucao),
-    PRAZO_PADRAO_DIAS,
-  ).toISOString(),
+  dataPrevistaDevolucao: format(
+    addDays(parseISO(emprestimo.dataPrevistaDevolucao), PRAZO_PADRAO_DIAS),
+    'yyyy-MM-dd',
+  ),
   renovacoes: emprestimo.renovacoes + 1,
 })
 
