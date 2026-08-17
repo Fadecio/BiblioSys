@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
 import type { Livro, ResultadoAcao } from '@/types'
-import type { DadosLivro } from '@/hooks/useLivros'
+import type { DadosLivro } from '@/contexts/LivrosContext'
 
 interface LivroFormProps {
   valorInicial?: Livro

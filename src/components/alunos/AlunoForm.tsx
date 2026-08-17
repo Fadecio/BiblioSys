@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
 import type { Aluno, ResultadoAcao } from "@/types";
-import type { DadosAluno } from "@/hooks/useAlunos";
+import type { DadosAluno } from "@/contexts/AlunosContext";
 
 interface AlunoFormProps {
   valorInicial?: Aluno;

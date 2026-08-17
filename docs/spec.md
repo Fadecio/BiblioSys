@@ -149,6 +149,11 @@ src/
     livros/
     emprestimos/
     dashboard/
+  contexts/
+    AlunosContext.tsx
+    LivrosContext.tsx
+    EmprestimosContext.tsx
+    AuthContext.tsx
   hooks/
     useAlunos.ts
     useLivros.ts

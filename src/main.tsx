@@ -42,10 +42,10 @@ async function bootstrap(root: Root) {
     { default: App },
   ] = await Promise.all([
     import("react-router-dom"),
-    import("@/hooks/useAuth"),
-    import("@/hooks/useAlunos"),
-    import("@/hooks/useLivros"),
-    import("@/hooks/useEmprestimos"),
+    import("@/contexts/AuthContext"),
+    import("@/contexts/AlunosContext"),
+    import("@/contexts/LivrosContext"),
+    import("@/contexts/EmprestimosContext"),
     import("./App.tsx"),
   ]);
 

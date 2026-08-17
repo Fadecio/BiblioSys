@@ -96,7 +96,14 @@ export const EmprestimoTable = ({ emprestimos }: EmprestimoTableProps) => {
                 <TableCell className="text-center">{formatarData(emprestimo.dataEmprestimo)}</TableCell>
                 <TableCell className="text-center">{formatarData(emprestimo.dataPrevistaDevolucao)}</TableCell>
                 <TableCell className="text-center">
-                  <StatusBadge status={status} />
+                  <div className="flex flex-col items-center gap-1">
+                    <StatusBadge status={status} />
+                    {devolvido && emprestimo.dataDevolucao && (
+                      <span className="text-xs text-muted-foreground">
+                        {formatarData(emprestimo.dataDevolucao)}
+                      </span>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-center">{emprestimo.renovacoes}</TableCell>
                 <TableCell className="flex justify-center gap-1">
@@ -104,6 +111,7 @@ export const EmprestimoTable = ({ emprestimos }: EmprestimoTableProps) => {
                     variant="ghost"
                     size="icon-sm"
                     aria-label="Editar data do empréstimo"
+                    disabled={devolvido}
                     onClick={() => abrirEdicaoData(emprestimo)}
                   >
                     <CalendarClock className="size-4" />
