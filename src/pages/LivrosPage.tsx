@@ -57,6 +57,7 @@ export const LivrosPage = () => {
     if (duplicado) {
       toast.info(`"${duplicado.titulo}" já cadastrado`, {
         description: `Categoria: ${duplicado.categoria}`,
+        duration: 8000,
       })
 
       const mesmoAutor = normalizarTexto(duplicado.autor) === normalizarTexto(dados.autor)
