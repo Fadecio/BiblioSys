@@ -27,12 +27,14 @@ interface AlunoTableProps {
   alunos: Aluno[];
   onEditar: (aluno: Aluno) => void;
   onExcluir: (id: string) => void;
+  onVerHistorico: (aluno: Aluno) => void;
 }
 
 export const AlunoTable = ({
   alunos,
   onEditar,
   onExcluir,
+  onVerHistorico,
 }: AlunoTableProps) => {
   if (alunos.length === 0) {
     return (
@@ -83,11 +85,15 @@ export const AlunoTable = ({
             </TableRow>
             {grupo.alunos.map((aluno) => (
               <TableRow key={aluno.id}>
-                <TableCell
-                  className="max-w-60 truncate font-medium text-foreground"
-                  title={aluno.nome}
-                >
-                  {aluno.nome}
+                <TableCell className="max-w-60 truncate p-0">
+                  <button
+                    type="button"
+                    onClick={() => onVerHistorico(aluno)}
+                    title={`Ver histórico de empréstimos de ${aluno.nome}`}
+                    className="box-border block w-full origin-left truncate p-2 text-left font-medium text-foreground no-underline transition-transform duration-150 ease-out hover:scale-[1.03] hover:text-foreground"
+                  >
+                    {aluno.nome}
+                  </button>
                 </TableCell>
                 <TableCell className="text-center text-muted-foreground">
                   {aluno.telefone ?? "—"}
