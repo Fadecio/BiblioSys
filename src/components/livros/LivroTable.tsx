@@ -1,4 +1,6 @@
+import { Fragment } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
+import { normalizarTexto } from '@/utils/texto'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -26,6 +28,23 @@ export const LivroTable = ({ livros, onEditar, onExcluir }: LivroTableProps) => 
     return <p className="py-10 text-center text-sm text-muted-foreground">Nenhum livro encontrado.</p>
   }
 
+  // livros já vêm ordenados por categoria > título (LivrosPage) — só precisamos
+  // detectar onde o grupo muda pra inserir o cabeçalho de seção. Comparado pela forma
+  // normalizada (sem símbolo/caixa) pelo mesmo motivo do AlunoTable.
+  const grupos: { categoria: string; livros: Livro[] }[] = []
+  for (const livro of livros) {
+    const grupoAtual = grupos[grupos.length - 1]
+    const mesmoGrupo = grupoAtual && normalizarTexto(grupoAtual.categoria) === normalizarTexto(livro.categoria)
+
+    if (mesmoGrupo) {
+      grupoAtual.livros.push(livro)
+    } else {
+      grupos.push({ categoria: livro.categoria, livros: [livro] })
+    }
+  }
+
+  let numero = 0
+
   return (
     <Table>
       <TableHeader>
@@ -40,50 +59,60 @@ export const LivroTable = ({ livros, onEditar, onExcluir }: LivroTableProps) => 
         </TableRow>
       </TableHeader>
       <TableBody>
-        {livros.map((livro, index) => {
-          return (
-            <TableRow key={livro.id}>
-              <TableCell className="text-muted-foreground">{index + 1}</TableCell>
-              <TableCell className="max-w-60 truncate font-medium text-foreground" title={livro.titulo}>
-                {livro.titulo}
-              </TableCell>
-              <TableCell className="max-w-45 truncate" title={livro.autor}>
-                {livro.autor}
-              </TableCell>
-              <TableCell>{livro.categoria}</TableCell>
-              <TableCell>{livro.codigo}</TableCell>
-              <TableCell>
-                <Badge variant={livro.quantidadeDisponivel === 0 ? 'destructive' : 'secondary'}>
-                  {livro.quantidadeDisponivel} / {livro.quantidadeTotal}
-                </Badge>
-              </TableCell>
-              <TableCell className="flex justify-end gap-1">
-                <Button variant="ghost" size="icon-sm" onClick={() => onEditar(livro)} aria-label="Editar livro">
-                  <Pencil className="size-4" />
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" aria-label="Excluir livro">
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Excluir livro</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tem certeza que deseja excluir "{livro.titulo}"? Essa ação não pode ser desfeita.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onExcluir(livro.id)}>Excluir</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+        {grupos.map((grupo) => (
+          <Fragment key={grupo.categoria}>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableCell colSpan={7} className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                {grupo.categoria}
               </TableCell>
             </TableRow>
-          )
-        })}
+            {grupo.livros.map((livro) => {
+              numero += 1
+              return (
+                <TableRow key={livro.id}>
+                  <TableCell className="text-muted-foreground">{numero}</TableCell>
+                  <TableCell className="max-w-60 truncate font-medium text-foreground" title={livro.titulo}>
+                    {livro.titulo}
+                  </TableCell>
+                  <TableCell className="max-w-45 truncate" title={livro.autor}>
+                    {livro.autor}
+                  </TableCell>
+                  <TableCell>{livro.categoria}</TableCell>
+                  <TableCell>{livro.codigo}</TableCell>
+                  <TableCell>
+                    <Badge variant={livro.quantidadeDisponivel === 0 ? 'destructive' : 'secondary'}>
+                      {livro.quantidadeDisponivel} / {livro.quantidadeTotal}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon-sm" onClick={() => onEditar(livro)} aria-label="Editar livro">
+                      <Pencil className="size-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" aria-label="Excluir livro">
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir livro</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir "{livro.titulo}"? Essa ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onExcluir(livro.id)}>Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </Fragment>
+        ))}
       </TableBody>
     </Table>
   )

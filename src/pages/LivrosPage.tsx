@@ -28,7 +28,13 @@ export const LivrosPage = () => {
             normalizarTexto(livro.codigo).includes(termo),
         )
       : livros
-    return [...filtrados].sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'))
+    return [...filtrados].sort((a, b) => {
+      const porCategoria = normalizarTexto(a.categoria).localeCompare(normalizarTexto(b.categoria), 'pt-BR', {
+        numeric: true,
+      })
+      if (porCategoria !== 0) return porCategoria
+      return a.titulo.localeCompare(b.titulo, 'pt-BR')
+    })
   }, [livros, busca])
 
   const abrirNovo = () => {
