@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -8,7 +9,7 @@ import { LivroTable } from '@/components/livros/LivroTable'
 import { useLivros } from '@/hooks/useLivros'
 import type { DadosLivro } from '@/contexts/LivrosContext'
 import { normalizarTexto } from '@/utils/texto'
-import type { Livro } from '@/types'
+import type { Livro, ResultadoAcao } from '@/types'
 
 export const LivrosPage = () => {
   const { livros, erro, adicionar, atualizar, remover } = useLivros()
@@ -47,7 +48,24 @@ export const LivrosPage = () => {
     setDialogAberto(true)
   }
 
-  const handleSalvar = async (dados: DadosLivro) => {
+  const handleSalvar = async (dados: DadosLivro): Promise<ResultadoAcao> => {
+    const tituloNormalizado = normalizarTexto(dados.titulo)
+    const duplicado = livros.find(
+      (livro) => livro.id !== livroEmEdicao?.id && normalizarTexto(livro.titulo) === tituloNormalizado,
+    )
+
+    if (duplicado) {
+      toast.info(`"${duplicado.titulo}" já cadastrado`, {
+        description: `Categoria: ${duplicado.categoria}`,
+      })
+
+      const mesmoAutor = normalizarTexto(duplicado.autor) === normalizarTexto(dados.autor)
+      const mesmaCategoria = normalizarTexto(duplicado.categoria) === normalizarTexto(dados.categoria)
+      if (mesmoAutor && mesmaCategoria) {
+        return { sucesso: false, mensagem: 'Este livro já está cadastrado com o mesmo autor e categoria.' }
+      }
+    }
+
     const resultado = livroEmEdicao ? await atualizar(livroEmEdicao.id, dados) : await adicionar(dados)
     if (resultado.sucesso) setDialogAberto(false)
     return resultado
