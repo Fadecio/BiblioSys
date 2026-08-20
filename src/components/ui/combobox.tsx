@@ -11,6 +11,7 @@ export interface ComboboxOption {
   label: string
   searchValue?: string
   disabled?: boolean
+  group?: string
 }
 
 interface ComboboxProps {
@@ -77,25 +78,36 @@ export const Combobox = ({
           {opcoesFiltradas.length === 0 && (
             <p className="px-2 py-4 text-center text-sm text-muted-foreground">{emptyMessage}</p>
           )}
-          {opcoesFiltradas.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              disabled={option.disabled}
-              onClick={() => {
-                onChange(option.value)
-                setAberto(false)
-                setBusca("")
-              }}
-              className={cn(
-                "flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left text-sm outline-hidden hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50",
-                option.value === value && "bg-accent/50"
-              )}
-            >
-              <Check className={cn("size-4 shrink-0", option.value === value ? "opacity-100" : "opacity-0")} />
-              <span className="truncate">{option.label}</span>
-            </button>
-          ))}
+          {opcoesFiltradas.map((option, indice) => {
+            const grupoAnterior = opcoesFiltradas[indice - 1]?.group
+            const mostrarCabecalho = option.group && option.group !== grupoAnterior
+
+            return (
+              <div key={option.value}>
+                {mostrarCabecalho && (
+                  <p className="px-1.5 pt-2 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase first:pt-1">
+                    {option.group}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  disabled={option.disabled}
+                  onClick={() => {
+                    onChange(option.value)
+                    setAberto(false)
+                    setBusca("")
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left text-sm outline-hidden hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50",
+                    option.value === value && "bg-accent/50"
+                  )}
+                >
+                  <Check className={cn("size-4 shrink-0", option.value === value ? "opacity-100" : "opacity-0")} />
+                  <span className="truncate">{option.label}</span>
+                </button>
+              </div>
+            )
+          })}
         </div>
       </PopoverContent>
     </Popover>

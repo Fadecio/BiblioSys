@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from "react";
+import { Fragment, useState, type SubmitEvent } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarClock, RotateCw, Undo2 } from "lucide-react";
@@ -34,7 +34,8 @@ import {
   podeRenovar,
   statusExibicao,
 } from "@/utils/emprestimo";
-import type { Emprestimo } from "@/types";
+import { normalizarTexto } from "@/utils/texto";
+import type { Aluno, Emprestimo } from "@/types";
 
 // data vem como "yyyy-MM-dd" (coluna `date` do Postgres, sem hora/fuso) — parseISO trata
 // como meia-noite local; new Date() trataria como UTC e "voltava" um dia em fusos como o do
@@ -104,6 +105,126 @@ export const EmprestimoTable = ({ emprestimos }: EmprestimoTableProps) => {
     }
   };
 
+  // agrupado por série > turma do aluno (mesmo critério do AlunosPage/AlunoTable) e,
+  // dentro do grupo, por nome — empréstimos de "Aluno removido" ficam num grupo à parte,
+  // no fim da lista, já que não têm série/turma pra agrupar.
+  const emprestimosOrdenados = [...emprestimos].sort((a, b) => {
+    const alunoA = alunos.find((item) => item.id === a.alunoId);
+    const alunoB = alunos.find((item) => item.id === b.alunoId);
+    if (!alunoA && !alunoB) return 0;
+    if (!alunoA) return 1;
+    if (!alunoB) return -1;
+    const porSerie = normalizarTexto(alunoA.serie).localeCompare(normalizarTexto(alunoB.serie), "pt-BR", {
+      numeric: true,
+    });
+    if (porSerie !== 0) return porSerie;
+    const porTurma = normalizarTexto(alunoA.turma).localeCompare(normalizarTexto(alunoB.turma), "pt-BR", {
+      numeric: true,
+    });
+    if (porTurma !== 0) return porTurma;
+    return alunoA.nome.localeCompare(alunoB.nome, "pt-BR");
+  });
+
+  const grupos: { rotulo: string; itens: Emprestimo[] }[] = [];
+  for (const emprestimo of emprestimosOrdenados) {
+    const aluno = alunos.find((item) => item.id === emprestimo.alunoId);
+    const rotulo = aluno ? `${aluno.serie} · Turma ${aluno.turma}` : "Aluno removido";
+    const grupoAtual = grupos[grupos.length - 1];
+    const mesmoGrupo =
+      grupoAtual &&
+      (aluno
+        ? normalizarTexto(grupoAtual.rotulo) === normalizarTexto(rotulo)
+        : grupoAtual.rotulo === rotulo);
+
+    if (mesmoGrupo) {
+      grupoAtual.itens.push(emprestimo);
+    } else {
+      grupos.push({ rotulo, itens: [emprestimo] });
+    }
+  }
+
+  const renderLinha = (emprestimo: Emprestimo, aluno: Aluno | undefined) => {
+    const livro = livros.find((item) => item.id === emprestimo.livroId);
+    const status = statusExibicao(emprestimo);
+    const devolvido = status === "devolvido";
+
+    return (
+      <TableRow key={emprestimo.id}>
+        <TableCell className="text-left font-medium text-foreground">
+          {aluno?.nome ?? "Aluno removido"}
+        </TableCell>
+        <TableCell className="text-left">
+          {livro?.titulo ?? "Livro removido"}
+        </TableCell>
+        <TableCell className="text-center">
+          {formatarData(emprestimo.dataEmprestimo)}
+        </TableCell>
+        <TableCell className="text-center">
+          {formatarData(emprestimo.dataPrevistaDevolucao)}
+        </TableCell>
+        <TableCell className="text-center">
+          <div className="flex flex-col items-center gap-1">
+            <StatusBadge status={status} />
+            {devolvido && emprestimo.dataDevolucao && (
+              <span className="text-xs text-muted-foreground">
+                {formatarData(emprestimo.dataDevolucao)}
+              </span>
+            )}
+          </div>
+        </TableCell>
+        <TableCell className="text-center">
+          {emprestimo.renovacoes}
+        </TableCell>
+        <TableCell className="flex justify-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Editar data do empréstimo"
+                disabled={devolvido}
+                onClick={() => abrirEdicaoData(emprestimo)}
+              >
+                <CalendarClock className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Editar data do empréstimo</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Renovar empréstimo"
+                disabled={devolvido || !podeRenovar(emprestimo)}
+                onClick={() => handleRenovar(emprestimo.id)}
+              >
+                <RotateCw className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Renovar empréstimo</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Registrar devolução"
+                disabled={devolvido}
+                onClick={() => handleDevolver(emprestimo.id)}
+              >
+                <Undo2 className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Registrar devolução</TooltipContent>
+          </Tooltip>
+        </TableCell>
+      </TableRow>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-3">
       {erro && <p className="px-2 pt-2 text-sm text-destructive">{erro}</p>}
@@ -120,88 +241,24 @@ export const EmprestimoTable = ({ emprestimos }: EmprestimoTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {emprestimos.map((emprestimo) => {
-            const aluno = alunos.find((item) => item.id === emprestimo.alunoId);
-            const livro = livros.find((item) => item.id === emprestimo.livroId);
-            const status = statusExibicao(emprestimo);
-            const devolvido = status === "devolvido";
-
-            return (
-              <TableRow key={emprestimo.id}>
-                <TableCell className="text-left font-medium text-foreground">
-                  {aluno?.nome ?? "Aluno removido"}
-                </TableCell>
-                <TableCell className="text-left">
-                  {livro?.titulo ?? "Livro removido"}
-                </TableCell>
-                <TableCell className="text-center">
-                  {formatarData(emprestimo.dataEmprestimo)}
-                </TableCell>
-                <TableCell className="text-center">
-                  {formatarData(emprestimo.dataPrevistaDevolucao)}
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex flex-col items-center gap-1">
-                    <StatusBadge status={status} />
-                    {devolvido && emprestimo.dataDevolucao && (
-                      <span className="text-xs text-muted-foreground">
-                        {formatarData(emprestimo.dataDevolucao)}
-                      </span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  {emprestimo.renovacoes}
-                </TableCell>
-                <TableCell className="flex justify-center gap-1">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Editar data do empréstimo"
-                        disabled={devolvido}
-                        onClick={() => abrirEdicaoData(emprestimo)}
-                      >
-                        <CalendarClock className="size-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Editar data do empréstimo</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Renovar empréstimo"
-                        disabled={devolvido || !podeRenovar(emprestimo)}
-                        onClick={() => handleRenovar(emprestimo.id)}
-                      >
-                        <RotateCw className="size-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Renovar empréstimo</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Registrar devolução"
-                        disabled={devolvido}
-                        onClick={() => handleDevolver(emprestimo.id)}
-                      >
-                        <Undo2 className="size-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Registrar devolução</TooltipContent>
-                  </Tooltip>
+          {grupos.map((grupo) => (
+            <Fragment key={grupo.rotulo}>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableCell
+                  colSpan={7}
+                  className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                >
+                  {grupo.rotulo}
                 </TableCell>
               </TableRow>
-            );
-          })}
+              {grupo.itens.map((emprestimo) =>
+                renderLinha(
+                  emprestimo,
+                  alunos.find((item) => item.id === emprestimo.alunoId),
+                ),
+              )}
+            </Fragment>
+          ))}
         </TableBody>
       </Table>
 

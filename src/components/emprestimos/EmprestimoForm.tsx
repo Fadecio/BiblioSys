@@ -5,6 +5,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { useAlunos } from "@/hooks/useAlunos";
 import { useLivros } from "@/hooks/useLivros";
+import { normalizarTexto } from "@/utils/texto";
 import type { ResultadoAcao } from "@/types";
 
 interface EmprestimoFormProps {
@@ -24,11 +25,26 @@ export const EmprestimoForm = ({
 
   const opcoesAlunos = useMemo(
     () =>
-      alunos.map((aluno) => ({
-        value: aluno.id,
-        label: `${aluno.nome} — ${aluno.turma}`,
-        searchValue: `${aluno.nome} ${aluno.turma}`,
-      })),
+      [...alunos]
+        // agrupado por série > turma e, dentro do grupo, por nome — mesmo critério do
+        // AlunosPage/AlunoTable, pra manter a listagem de alunos consistente no sistema
+        .sort((a, b) => {
+          const porSerie = normalizarTexto(a.serie).localeCompare(normalizarTexto(b.serie), 'pt-BR', {
+            numeric: true,
+          })
+          if (porSerie !== 0) return porSerie
+          const porTurma = normalizarTexto(a.turma).localeCompare(normalizarTexto(b.turma), 'pt-BR', {
+            numeric: true,
+          })
+          if (porTurma !== 0) return porTurma
+          return a.nome.localeCompare(b.nome, 'pt-BR')
+        })
+        .map((aluno) => ({
+          value: aluno.id,
+          label: aluno.nome,
+          searchValue: `${aluno.nome} ${aluno.turma} ${aluno.serie}`,
+          group: `${aluno.serie} · Turma ${aluno.turma}`,
+        })),
     [alunos],
   );
 
