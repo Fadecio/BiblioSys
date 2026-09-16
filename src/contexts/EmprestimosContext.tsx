@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { loansService, type LoanWithRelations } from '@/services/loans.service'
 import { ServiceError } from '@/services/errors'
 import type { Emprestimo, ResultadoAcao } from '@/types'
@@ -72,11 +72,18 @@ export const EmprestimosProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [])
 
-  // status nunca é lido do dado salvo — é sempre recalculado a partir da data atual (spec §6)
-  const emprestimos = emprestimosBrutos.map((emprestimo) => ({
-    ...emprestimo,
-    status: derivarStatus(emprestimo),
-  }))
+  // status nunca é lido do dado salvo — é sempre recalculado a partir da data atual (spec §6).
+  // useMemo aqui não é otimização opcional: sem ele o array ganha identidade nova a cada render
+  // do provider, e o gráfico do dashboard (data={...} do Recharts) remonta o DOM das barras a
+  // cada render, causando piscada visível.
+  const emprestimos = useMemo(
+    () =>
+      emprestimosBrutos.map((emprestimo) => ({
+        ...emprestimo,
+        status: derivarStatus(emprestimo),
+      })),
+    [emprestimosBrutos],
+  )
 
   const registrar = async (alunoId: string, livroId: string): Promise<ResultadoAcao> => {
     try {
